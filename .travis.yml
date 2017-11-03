@@ -33,22 +33,6 @@ matrix:
         - COMP=gcc-6
         - COMPXX=g++-6
 
-    - os: osx
-      osx_image: xcode8
-      env:
-        - SCRIPT=build.sh
-        - MATRIX_EVAL="brew install gcc5"
-        - COMP=gcc-5
-        - COMPXX=g++-5
-
-    - os: osx
-      osx_image: xcode8
-      env:
-        - SCRIPT=build.sh
-        - MATRIX_EVAL="brew install gcc6"
-        - COMP=gcc-6
-        - COMPXX=g++-6
-
 before_install:
   - if [[ "${MATRIX_EVAL}" != "" ]]; then echo ${MATRIX_EVAL} && eval ${MATRIX_EVAL}; fi
 
