@@ -1,0 +1,36 @@
+%YAML:1.0
+---
+# taille réelle de la table en millimètres
+boardSize: [ 820, 610 ]
+
+# ratio à appliquer à la taille réelle pour créer l'image de travail
+boardRatio: 1
+
+# offset vertical a appliquer aux objets détectés (prendre en compte boardRatio)
+yCorrection: 15
+
+# diamètre réel des objets à détecter en millimètres
+diametreObjet: 40
+
+# largeur des sondes de culeur en pixels
+probeSize: 20
+
+# position des marqueurs (coin supérieur gauche) par identifiant ARUCO
+markersPos:
+   - [ 150, 150 ]
+   - [ 380, 210 ]
+   - [ 0, 0 ] # unused
+   - [ 0, 0 ]
+   - [ 750, 0 ]
+   - [ 600, 150 ]
+
+# position des pallets connus
+orangeRefs:
+  - [ 170, 80 ]
+
+greenRefs:
+  - [ 280, 240 ]
+
+# listes des zones dans lequelles il peut y avoir des objets
+detectZones:
+  - [ 410, 100, 410, 300 ]

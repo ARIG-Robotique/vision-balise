@@ -22,6 +22,7 @@ set(DOWNLOAD_DIR "download")
 
 set(OpenCV_DIR        "${DOWNLOAD_DIR}/opencv/build")
 set(JSON_LIB_DIR      "${DOWNLOAD_DIR}/json")
+set(SPDLOG_LIB_DIR    "${DOWNLOAD_DIR}/spdlog")
 
 # Variable de build
 set(CMAKE_CXX_STANDARD 11)
@@ -49,13 +50,17 @@ execute_process(
 # Inclusion de la lib externe OpenCV #
 ########################################
 find_package(OpenCV REQUIRED)
-#find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui aruco)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Récupération de la définition pour JSON #
 ###########################################
 include_directories(${JSON_LIB_DIR})
+
+# Récupération de la définition pour SPDLOG #
+#############################################
+include_directories(${SPDLOG_LIB_DIR})
 
 # Récupération des sources du projet principale #
 #################################################
