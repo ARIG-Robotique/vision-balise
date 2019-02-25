@@ -22,11 +22,16 @@ set(DOWNLOAD_DIR "download")
 
 # Pour faire de la cross compilation
 if (DEFINED BUILD_PI)
+    set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/tools)
     set(CMAKE_TOOLCHAIN_FILE ./raspberry.cmake)
 endif()
 if (DEFINED BUILD_PI_NEW)
+    set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/newer-tools)
     set(CMAKE_TOOLCHAIN_FILE ./raspberry-new.cmake)
 endif()
+
+message(STATUS "Build PI     : ${BUILD_PI}")
+message(STATUS "Build PI New : ${BUILD_PI_NEW}")
 
 # Variable de build
 set(CMAKE_CXX_STANDARD 11)
@@ -34,6 +39,15 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+if (NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    message(STATUS "Debug mode ON")
+    add_definitions(-DDEBUG_MODE)
+endif()
 
 # Check program
 checkProgram(git)
@@ -61,7 +75,7 @@ elseif(DEFINED BUILD_PI_NEW)
 else()
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build")
 endif()
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui aruco)
 
 message(STATUS "OpenCV library status:")
@@ -74,12 +88,12 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 # Récupération de la définition pour JSON #
 ###########################################
-set(JSON_LIB_DIR  "${DOWNLOAD_DIR}/json")
+set(JSON_LIB_DIR "${DOWNLOAD_DIR}/json")
 include_directories(${JSON_LIB_DIR})
 
 # Récupération de la définition pour SPDLOG #
 #############################################
-set(SPDLOG_LIB_DIR    "${DOWNLOAD_DIR}/spdlog")
+set(SPDLOG_LIB_DIR "${DOWNLOAD_DIR}/spdlog")
 include_directories(${SPDLOG_LIB_DIR})
 
 # Récupération des sources du projet principale #
