@@ -4,19 +4,28 @@
 PROJECT="ARIG C++ Vision balise"
 
 ROOT_DIR=$(pwd)
-BUILD_DIR=$ROOT_DIR/build
+BUILD_NAME=build
+BUILD_DIR=${ROOT_DIR}/${BUILD_NAME}
 
-echo "Build du projet $PROJECT"
-if [ -d "$BUILD_DIR" ] ; then
-    echo "-- Nettoyage du répertoire de build $BUILD_DIR"
-    rm -Rf $BUILD_DIR
+cd ${ROOT_DIR}
+echo "Build du projet ${PROJECT}"
+if [ -d "${BUILD_DIR}" ] ; then
+    echo "-- Nettoyage du répertoire de build ${BUILD_DIR}"
+    rm -Rf ${BUILD_DIR}
 fi
 
-echo "-- Création du répertoire de build $BUILD_DIR"
-mkdir -p $BUILD_DIR
+echo "-- Création du répertoire de build ${BUILD_DIR}"
+mkdir -p ${BUILD_DIR}
 
-echo "-- Build du projet $PROJECT"
-cd $BUILD_DIR
+echo "-- Configuration du projet ${PROJECT}"
+cd ${BUILD_DIR}
 cmake .. || exit $?
+
+echo "-- Build OpenCV"
+cd ${ROOT_DIR}/download/opencv/${BUILD_NAME}
+cmake --build . || exit $?
+
+echo "-- Build du projet ${PROJECT}"
+cd ${BUILD_DIR}
 cmake --build . || exit $?
 echo "Build terminé"

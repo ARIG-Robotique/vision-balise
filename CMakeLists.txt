@@ -4,25 +4,29 @@
 # Description: Build du programme de vision balise                            #
 #=============================================================================#
 # Contrôle de la version minimale de CMake
-cmake_minimum_required(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.9.2)
 
 # Check program requis
 function (checkProgram name)
-    message("-- Detecting ${name} program")
+    message(STATUS "Detecting ${name} program")
     find_program(PROGRAM_PRESENT ${name})
     if (NOT PROGRAM_PRESENT)
         message(FATAL_ERROR "${name} must be installed")
     else()
-        message("-- Detecting ${name} program - done")
+        message(STATUS "Detecting ${name} program - done")
     endif()
 endfunction(checkProgram)
 
 # Variable pour les dépendances externes
 set(DOWNLOAD_DIR "download")
 
-set(OpenCV_DIR        "${DOWNLOAD_DIR}/opencv/build")
-set(JSON_LIB_DIR      "${DOWNLOAD_DIR}/json")
-set(SPDLOG_LIB_DIR    "${DOWNLOAD_DIR}/spdlog")
+# Pour faire de la cross compilation
+if (DEFINED BUILD_PI)
+    set(CMAKE_TOOLCHAIN_FILE ./raspberry.cmake)
+endif()
+if (DEFINED BUILD_PI_NEW)
+    set(CMAKE_TOOLCHAIN_FILE ./raspberry-new.cmake)
+endif()
 
 # Variable de build
 set(CMAKE_CXX_STANDARD 11)
@@ -49,17 +53,33 @@ execute_process(
 
 # Inclusion de la lib externe OpenCV #
 ########################################
+set(OpenCV_SHARED OFF)
+if (DEFINED BUILD_PI)
+    set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi")
+elseif(DEFINED BUILD_PI_NEW)
+    set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi-new")
+else()
+    set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build")
+endif()
 find_package(OpenCV REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui aruco)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+message(STATUS "OpenCV library status:")
+message(STATUS "    config: ${OpenCV_DIR}")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+#include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Récupération de la définition pour JSON #
 ###########################################
+set(JSON_LIB_DIR  "${DOWNLOAD_DIR}/json")
 include_directories(${JSON_LIB_DIR})
 
 # Récupération de la définition pour SPDLOG #
 #############################################
+set(SPDLOG_LIB_DIR    "${DOWNLOAD_DIR}/spdlog")
 include_directories(${SPDLOG_LIB_DIR})
 
 # Récupération des sources du projet principale #

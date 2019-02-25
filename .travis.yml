@@ -5,9 +5,13 @@ dist: trusty
 
 matrix:
   include:
-    # - os: linux
-    #   env:
-    #     - SCRIPT=build-pi.sh
+    - os: linux
+      env:
+        - SCRIPT=build-pi.sh
+
+    - os: linux
+      env:
+        - SCRIPT=build-pi-new.sh
 
     - os: linux
       addons:

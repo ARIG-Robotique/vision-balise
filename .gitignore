@@ -1,8 +1,6 @@
 ### Project build directory
-build/
-build-pi/
-cmake-build-debug/
-cmake-build-release/
+build*/
+cmake-build-*/
 download/
 output/
 
