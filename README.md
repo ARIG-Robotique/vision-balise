@@ -6,56 +6,94 @@
 Ce projet ouvre un socket TCP sur le port 40000 afin de recevoir des ordres
 JSON pour piloter la récupération des information avec [OpenCV](https://opencv.org/)
 
+## Options
+
+```bash
+$ vision_balise --help
+```
+
+:-)
+
 ## Messages JSON
 
-### Récupérer les infos du pattern de construction du batiment
+### Récupérer la dernière photo prise
 
 * Query
 ```json
-{
-  "action": "PATTERN"
-}
+{"action":"PHOTO"}
 ```
 
 * Réponse
 ```json
 {
   "status": "OK",
-  "action": "PATTERN",
-  "datas": {
-    "colorLeft": "FFFFFF",
-    "colorCenter": "12AA43",
-    "colorRight": "EFEFEF"
-  },
-  "errorMessage": null
+  "action": "PHOTO",
+  "datas": "......base64....."
 }
 ```
 
-### Récupérer l'état des stations d'épurations
+### Récupérer le statut (etallonage ok + résultat détection)
 
 * Query
 ```json
-{
-  "action": "STATIONS"
-}
+{"action":"STATUS"}
 ```
 
 * Réponse
 ```json
 {
   "status": "OK",
-  "action": "STATIONS",
+  "action": "STATUS",
   "datas": {
-    "stationEquipe": {
-      "eauxPropres" : 3,
-      "eauxSales" : 2
-    },
-    "stationAdverse": {
-      "eauxPropres" : 3,
-      "eauxSales" : 2
-    }
-  },
-  "errorMessage": null
+    "foundGreen": [
+      {"x": 100, "y": 100}
+    ],
+    "foundRed": [
+      {"x": 100, "y": 100}
+    ],
+    "foundBlue": [
+      {"x": 100, "y": 100}
+    ],
+    "verifiedGreen": [
+      {"x": 100, "y": 100}
+    ],
+    "verifiedRed": [
+      {"x": 100, "y": 100}
+    ],
+    "verifiedBlue": [
+      {"x": 100, "y": 100}
+    ]
+  }
+}
+```
+
+### Lancer l'étallonage
+
+* Query
+```json
+{"action": "ETALLONAGE"}
+```
+
+* Réponse
+```json
+{
+ "status": "OK",
+ "action": "ETALLONAGE"
+}
+```
+
+### Lancer la détection
+
+* Query
+```json
+{"action": "DETECTION"}
+```
+
+* Réponse
+```json
+{
+ "status": "OK",
+ "action": "DETECTION"
 }
 ```
 
@@ -63,16 +101,13 @@ JSON pour piloter la récupération des information avec [OpenCV](https://opencv
 
 * Query
 ```json
-{
-  "action": "EXIT"
-}
+{"action": "EXIT"}
 ```
 
 * Réponse
 ```json
 {
   "status": "OK",
-  "action": "EXIT",
-  "errorMessage": null
+  "action": "EXIT"
 }
 ```

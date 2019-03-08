@@ -6,6 +6,7 @@
 
 ProcessThread::ProcessThread(Config *config) {
     m_config = config;
+    m_action = ACTION_IDLE;
     m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
 }
 
@@ -64,8 +65,7 @@ JsonResult ProcessThread::getPhoto(int width) {
     if (img.empty()) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Pas d'image";
-    }
-    else {
+    } else {
         r.status = RESPONSE_OK;
         r.datas = arig_utils::matToBase64(img);
     }
@@ -116,6 +116,8 @@ JsonResult ProcessThread::exit() {
  * @return
  */
 JsonResult ProcessThread::action(const char *_action) {
+    spdlog::info("ProcessThread: Action {}", _action);
+
     pthread_mutex_lock(&m_actionMutex);
     m_action = string(_action);
     pthread_cond_signal(&m_actionCond);
@@ -145,12 +147,19 @@ void *ProcessThread::create(void *context) {
  * @return
  */
 void *ProcessThread::process() {
+    spdlog::info("ProcessThread: ready");
+
     bool stop = false;
+    bool noWait = true;
     string action;
 
     while (!stop) {
         pthread_mutex_lock(&m_actionMutex);
-        pthread_cond_wait(&m_actionCond, &m_actionMutex);
+        if (noWait) {
+            noWait = false;
+        } else {
+            pthread_cond_wait(&m_actionCond, &m_actionMutex);
+        }
         action = m_action;
         pthread_mutex_unlock(&m_actionMutex);
 
@@ -158,13 +167,28 @@ void *ProcessThread::process() {
             spdlog::info("ProcessThread: Demande d'arret du thread");
             stop = true;
 
+        } else if (action == ACTION_IDLE) {
+            spdlog::info("ProcessThread: Démarrage de la prise de photo");
+            processIdle();
+
+            noWait = true;
+
         } else if (action == ACTION_ETALLONAGE) {
             spdlog::info("ProcessThread: Démarrage de l'étallonage");
             processEtallonage();
 
+            // on repasse en idle tout de suite
+            pthread_mutex_lock(&m_actionMutex);
+            m_action = ACTION_IDLE;
+            pthread_mutex_unlock(&m_actionMutex);
+
+            noWait = true;
+
         } else if (action == ACTION_DETECTION) {
             spdlog::info("ProcessThread: Démarrage de la détection");
             processDetection();
+
+            noWait = true;
 
         } else {
             spdlog::warn("ProcessThread: action non supportée");
@@ -172,6 +196,39 @@ void *ProcessThread::process() {
     }
 
     pthread_exit(nullptr);
+}
+
+/**
+ * Boucle de photo
+ */
+void ProcessThread::processIdle() {
+    const int wait = 2;
+    string action;
+
+    while (true) {
+        pthread_mutex_lock(&m_actionMutex);
+        action = m_action;
+        pthread_mutex_unlock(&m_actionMutex);
+
+        if (action != ACTION_IDLE) {
+            break;
+        }
+
+        // TODO camera
+        Mat source = imread("samples/DS1_1526.jpg", IMREAD_COLOR);
+
+        if (!source.data) {
+            spdlog::error("Could not open or find the image");
+        } else {
+            spdlog::info("Photo !");
+
+            pthread_mutex_lock(&m_datasMutex);
+            m_imgOrig = source;
+            pthread_mutex_unlock(&m_datasMutex);
+        }
+
+        this_thread::sleep_for(chrono::seconds(wait));
+    }
 }
 
 /**
@@ -220,8 +277,8 @@ void ProcessThread::processDetection() {
         action = m_action;
         pthread_mutex_unlock(&m_actionMutex);
 
-        if (action == ACTION_EXIT) {
-            pthread_exit(nullptr);
+        if (action != ACTION_DETECTION) {
+            break;
         }
 
         // TODO camera

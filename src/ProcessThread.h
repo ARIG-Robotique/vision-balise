@@ -40,6 +40,7 @@ private:
 
     JsonResult action(const char *_action);
 
+    void processIdle();
     void processEtallonage();
     void processDetection();
 };
