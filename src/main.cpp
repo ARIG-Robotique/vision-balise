@@ -10,10 +10,12 @@ int main(int argc, char **argv) {
             "{help | | Display help }"
             "{test | | Run in test mode }"
             "{debug | | Debug messages }"
-            "{output-dir | output | Process images storage }"
+            "{output-dir | output/ | Process images storage }"
             "{calibration | | Run calibration }"
-            "{calibration-dir | samples/calib | Calibration images }"
+            "{calibration-dir | samples/calib/ | Calibration images }"
             "{calibration-file | calibration.yml | Calibration file }"
+            "{etallonage | | Run etallonage }"
+            "{etallonage-file | | Etallonage file }"
             "{config-file | config.yml | Config file }"
             "{socket-type | inet | Socket type (inet or unix) }"
             "{socket-port | 9042 | Port for inet socket }"
@@ -32,6 +34,7 @@ int main(int argc, char **argv) {
     spdlog::info("Start vision balise");
 
     Config config;
+    config.debug = parser.has("debug") || parser.has("test");
     config.testMode = parser.has("test");
     config.outputDir = parser.get<string>("output-dir");
 
@@ -40,12 +43,13 @@ int main(int argc, char **argv) {
     char timeBuffer[14];
     strftime(timeBuffer, 14, "%Y%m%d%H%M%S", ptm);
 
-    config.outputPrefix = config.outputDir + "/" + timeBuffer + "-";
+    config.outputPrefix = config.outputDir + timeBuffer + "-";
     spdlog::debug("Image output prefix is {}", config.outputPrefix.c_str());
 
     const String configFilename = parser.get<String>("config-file");
     const String calibFilename = parser.get<String>("calibration-file");
     const String calibDir = parser.get<String>("calibration-dir");
+    const String etallonageFilename = parser.get<String>("etallonage-file");
 
     if (parser.has("calibration")) {
         Calibration calibration;
@@ -66,9 +70,28 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+    if (parser.has("etallonage")) {
+        if (etallonageFilename.empty()) {
+            spdlog::error("No etallonage file provided");
+            return 2;
+        }
+
+        Etallonage etallonage(&config);
+
+        if (etallonage.runAndSave(etallonageFilename)) {
+            return 0;
+        }
+        return 2;
+    }
+
     if (config.testMode) {
         runTest(&config);
         return 0;
+    }
+
+    if (!etallonageFilename.empty() && !config.readEtallonageFile(etallonageFilename)) {
+        spdlog::error("Cannot read provided etallonage file");
+        return 2;
     }
 
     SocketHelper socket(parser.get<string>("socket-type"));
@@ -89,6 +112,12 @@ int main(int argc, char **argv) {
     if (!processThread.isReady()) {
         spdlog::error("Cannot create OpenCV thread");
         return 2;
+    }
+
+    // etallonage fait depuis un fichier
+    if (!etallonageFilename.empty()) {
+        spdlog::info("Etallonage from file");
+        processThread.setEtallonageOk();
     }
 
     bool stop = false, waitConnection = true;

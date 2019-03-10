@@ -11,6 +11,7 @@ private:
 public:
     explicit Etallonage(Config* config);
     bool run(const Mat &source, int index);
+    bool runAndSave(const String &filename);
 
 private:
     void findMarkers(const Mat &image, vector<Point2f> &corners, vector<int> &markerIds);

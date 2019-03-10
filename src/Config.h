@@ -7,6 +7,7 @@
 class Config {
 
 public:
+    bool debug = false;
     bool testMode = false;
     String outputDir;
     String outputPrefix;
@@ -16,6 +17,7 @@ public:
     Mat distCoeffs;
 
     // from config
+    int cameraIndex;
     Size boardSize;
     float boardRatio;
     int yCorrection;
@@ -33,6 +35,7 @@ public:
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);
+    bool readEtallonageFile(const String &filename);
 
 };
 

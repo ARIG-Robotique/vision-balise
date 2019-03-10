@@ -18,6 +18,7 @@ bool Config::readConfigFile(const String &filename) {
         return false;
     }
 
+    fs["cameraIndex"] >> cameraIndex;
     fs["boardSize"] >> boardSize;
     fs["boardRatio"] >> boardRatio;
     fs["yCorrection"] >> yCorrection;
@@ -35,7 +36,7 @@ bool Config::readConfigFile(const String &filename) {
 
     FileNode detectZonesNode = fs["detectZones"];
     readConfigVector<Rect>(detectZones, detectZonesNode);
-    
+
     return true;
 }
 
@@ -48,6 +49,20 @@ bool Config::readCalibrationFile(const String &filename) {
 
     fs["cameraMatrix"] >> cameraMatrix;
     fs["distCoeffs"] >> distCoeffs;
+
+    return true;
+}
+
+bool Config::readEtallonageFile(const String &filename) {
+    FileStorage fs(filename, FileStorage::READ);
+
+    if (!fs.isOpened()) {
+        return false;
+    }
+
+    fs["homography"] >> homography;
+    fs["green"] >> green;
+    fs["orange"] >> orange;
 
     return true;
 }

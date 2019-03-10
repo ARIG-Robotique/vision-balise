@@ -30,6 +30,7 @@ JsonResult ProcessThread::getStatus() {
     json datas;
 
     pthread_mutex_lock(&m_datasMutex);
+    datas["cameraReady"] = m_cameraReady;
     datas["etallonageOk"] = m_etallonageOk;
     datas["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_datasMutex);
@@ -149,6 +150,17 @@ void *ProcessThread::create(void *context) {
 void *ProcessThread::process() {
     spdlog::info("ProcessThread: ready");
 
+    m_video = new VideoCapture(m_config->cameraIndex);
+
+    pthread_mutex_lock(&m_datasMutex);
+    m_cameraReady = m_video->isOpened();
+    pthread_mutex_unlock(&m_datasMutex);
+
+    if (!m_cameraReady) {
+        spdlog::error("Cannot open camera");
+        pthread_exit(nullptr);
+    }
+
     bool stop = false;
     bool noWait = true;
     string action;
@@ -164,6 +176,7 @@ void *ProcessThread::process() {
         pthread_mutex_unlock(&m_actionMutex);
 
         if (action == ACTION_EXIT) {
+            m_video->release();
             spdlog::info("ProcessThread: Demande d'arret du thread");
             stop = true;
 
@@ -214,8 +227,8 @@ void ProcessThread::processIdle() {
             break;
         }
 
-        // TODO camera
-        Mat source = imread("samples/DS1_1526.jpg", IMREAD_COLOR);
+        Mat source;
+        m_video->read(source);
 
         if (!source.data) {
             spdlog::error("Could not open or find the image");
@@ -243,8 +256,8 @@ void ProcessThread::processEtallonage() {
     int i = 0;
 
     while (!ok && i < tries) {
-        // TODO camera
-        Mat source = imread("samples/DS1_1526.jpg", IMREAD_COLOR);
+        Mat source;
+        m_video->read(source);
 
         if (!source.data) {
             spdlog::error("Could not open or find the image");
@@ -281,8 +294,8 @@ void ProcessThread::processDetection() {
             break;
         }
 
-        // TODO camera
-        Mat source = imread("samples/DS1_1526.jpg", IMREAD_COLOR);
+        Mat source;
+        m_video->read(source);
 
         if (!source.data) {
             spdlog::error("Could not open or find the image");

@@ -20,6 +20,7 @@ bool Etallonage::run(const Mat &source, int index) {
     findMarkers(undistorted, markerCorners, markerIds);
 
     if (markerIds.size() < 4) {
+        spdlog::warn("No markers found");
         return false;
     }
 
@@ -38,9 +39,11 @@ bool Etallonage::run(const Mat &source, int index) {
     // calibration des couleurs
     readColors(undistorted);
 
-    drawMarkerCorners(undistorted, transformedCorners, markerIds);
-    drawColors(undistorted);
-    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", undistorted);
+    if (config->debug) {
+        drawMarkerCorners(undistorted, transformedCorners, markerIds);
+        drawColors(undistorted);
+        imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", undistorted);
+    }
 
     if (config->testMode) {
         imshow("Process", undistorted);
@@ -48,6 +51,34 @@ bool Etallonage::run(const Mat &source, int index) {
     }
 
     return true;
+}
+
+/**
+ * Lance un etallonage et sauvegarde dans un fichier
+ * @param filename
+ */
+bool Etallonage::runAndSave(const String &filename) {
+    VideoCapture video(config->cameraIndex);
+
+    Mat source;
+    video.read(source);
+
+    if (!source.data) {
+        spdlog::error("Could not open or find the image");
+        return false;
+    }
+
+    if (run(source, 0)) {
+        FileStorage fs(filename, FileStorage::WRITE);
+        fs << "homography" << config->homography;
+        fs << "orange" << config->orange;
+        fs << "green" << config->green;
+        fs.release();
+
+        return true;
+    }
+
+    return false;
 }
 
 /**

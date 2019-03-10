@@ -62,8 +62,10 @@ bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &
         bool found = findChessboardCorners(image, board_sz, corners,
                                            CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
 
-        drawChessboardCorners(image, board_sz, corners, found);
-        imwrite(config->outputPrefix + "calib-" + arig_utils::basename(file), image);
+        if (config->debug) {
+            drawChessboardCorners(image, board_sz, corners, found);
+            imwrite(config->outputPrefix + "calib-" + arig_utils::basename(file), image);
+        }
 
         if (config->testMode) {
             imshow("Calibration", image);

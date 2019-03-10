@@ -25,13 +25,15 @@ json Detection::run(const Mat &source, int index) {
     vector<Point> foundGreen, verifiedGreen;
     detectColor(undistorted, config->green, config->greenRefs, foundGreen, verifiedGreen);
 
-    drawObjects(undistorted, foundOrange, "Orange", config->orange);
-    drawObjects(undistorted, foundGreen, "Green", config->green);
+    if (config->debug) {
+        drawObjects(undistorted, foundOrange, "Orange", config->orange);
+        drawObjects(undistorted, foundGreen, "Green", config->green);
 
-    drawObjects(undistorted, verifiedOrange, "Still orange", config->orange);
-    drawObjects(undistorted, verifiedGreen, "Still green", config->green);
+        drawObjects(undistorted, verifiedOrange, "Still orange", config->orange);
+        drawObjects(undistorted, verifiedGreen, "Still green", config->green);
 
-    imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", undistorted);
+        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", undistorted);
+    }
 
     if (config->testMode) {
         imshow("Process", undistorted);

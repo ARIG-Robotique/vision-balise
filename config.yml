@@ -1,5 +1,8 @@
 %YAML:1.0
 ---
+# index de la camera
+cameraIndex: 0
+
 # taille réelle de la table en millimètres
 boardSize: [ 820, 610 ]
 

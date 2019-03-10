@@ -8,10 +8,12 @@ class ProcessThread {
 
 private:
     Config* m_config;
+    VideoCapture* m_video;
 
     pthread_t m_thread;
 
     bool m_ready = false;
+    bool m_cameraReady = false;
     bool m_etallonageOk = false;
     json m_detectionResult;
     Mat m_imgOrig;
@@ -24,6 +26,10 @@ private:
 
 public:
     explicit ProcessThread(Config* config);
+
+    void setEtallonageOk() {
+        m_etallonageOk = true;
+    }
 
     bool isReady();
     JsonResult getStatus();
