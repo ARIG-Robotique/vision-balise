@@ -6,24 +6,25 @@
 Ce projet ouvre un socket TCP sur le port 40000 afin de recevoir des ordres
 JSON pour piloter la récupération des information avec [OpenCV](https://opencv.org/)
 
-## Options
-
+Rendre la camera accessible par OpenCV : 
 ```bash
-$ vision_balise --help
+$ sudo modprobe bcm2835-v4l2
 ```
 
-- `test` : lance le mode de test (fichiers en dur et affichage du résultat)
-- `debug` : actives les messages de debug et le stockage des images en sortie
-- `output-dir=output/` : dossier de stockage des images en sortie
-- `calibration` : lance la calibration de l'objectif
-- `calibration-dir=samples/calib/` : dossier contenant les photos source pour la calibration
-- `calibration-file=calibration.yml` : fichier de résultat de calibration
-- `etallonage` : lance l'étallonage one-shot
-- `etallonage-file=` : fichier de résultat de l'étallonage
-- `config-file=config.yml` : fichier de configuration
-- `socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
-- `socket-port=9042` : port pour le socket inet
-- `socket-file=/tmp/vishi_bbalise.sock` : fichier pour le socket unix
+## Options
+
+- `--test` : lance le mode de test (fichiers en dur et affichage du résultat)
+- `--debug` : actives les messages de debug et le stockage des images en sortie
+- `--output-dir=output/` : dossier de stockage des images en sortie
+- `--calibration` : lance la calibration de l'objectif
+- `--calibration-dir=samples/calib/` : dossier contenant les photos source pour la calibration
+- `--calibration-file=calibration.yml` : fichier de résultat de calibration
+- `--etallonage` : lance l'étallonage one-shot
+- `--etallonage-file=` : fichier de résultat de l'étallonage
+- `--config-file=config.yml` : fichier de configuration
+- `--socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
+- `--socket-port=9042` : port pour le socket inet
+- `--socket-file=/tmp/vishi_bbalise.sock` : fichier pour le socket unix
 
 
 ## Messages JSON
