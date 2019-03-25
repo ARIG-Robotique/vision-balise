@@ -1,7 +1,7 @@
 language: cpp
 
 sudo: required
-dist: trusty
+dist: xenial
 
 matrix:
   include:
@@ -14,28 +14,9 @@ matrix:
         - SCRIPT=build-pi-new.sh
 
     - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
       env:
         - SCRIPT=build.sh
-        - COMP=gcc-5
-        - COMPXX=g++-5
 
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-      env:
-        - SCRIPT=build.sh
-        - COMP=gcc-6
-        - COMPXX=g++-6
 
 before_install:
   - if [[ "${MATRIX_EVAL}" != "" ]]; then echo ${MATRIX_EVAL} && eval ${MATRIX_EVAL}; fi
