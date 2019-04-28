@@ -71,7 +71,8 @@ bool Etallonage::runAndSave(const String &filename) {
     if (run(source, 0)) {
         FileStorage fs(filename, FileStorage::WRITE);
         fs << "homography" << config->homography;
-        fs << "orange" << config->orange;
+        fs << "blue" << config->blue;
+        fs << "red" << config->red;
         fs << "green" << config->green;
         fs.release();
 
@@ -167,10 +168,11 @@ Scalar Etallonage::readColor(const Mat &image, const vector<Point> &pts) {
  * @param config
  */
 void Etallonage::readColors(const Mat &image) {
-    config->orange = readColor(image, config->orangeRefs);
+    config->blue = readColor(image, config->blueRefs);
+    config->red = readColor(image, config->redRefs);
     config->green = readColor(image, config->greenRefs);
 
-    spdlog::debug("COLORS CALIBRATION\n orange: {}\n green: {}", config->orange, config->green);
+    spdlog::debug("COLORS CALIBRATION\n blue: {}\n red: {}\n green: {}", config->blue, config->red, config->green);
 }
 
 /**
@@ -195,7 +197,12 @@ void Etallonage::drawMarkerCorners(Mat &output, const vector<Point2f> &corners, 
  * @param config
  */
 void Etallonage::drawColors(Mat &output) {
-    for (auto const &pt : config->orangeRefs) {
+    for (auto const &pt : config->blueRefs) {
+        Rect probe = arig_utils::getProbe(pt, config->probeSize);
+        rectangle(output, probe, Scalar(20, 255, 20));
+    }
+
+    for (auto const &pt : config->redRefs) {
         Rect probe = arig_utils::getProbe(pt, config->probeSize);
         rectangle(output, probe, Scalar(20, 255, 20));
     }
@@ -205,17 +212,21 @@ void Etallonage::drawColors(Mat &output) {
         rectangle(output, probe, Scalar(20, 255, 20));
     }
 
-    Size cartoucheSize(100, 50);
+    Size cartoucheSize(100, 75);
 
     Rect bg(output.cols - cartoucheSize.width, output.rows - cartoucheSize.height, cartoucheSize.width,
             cartoucheSize.height);
     rectangle(output, bg, Scalar(255, 255, 255), -1);
 
-    Rect rectOrange(bg.x + 5, bg.y + 5, 10, 10);
-    rectangle(output, rectOrange, config->orange, -1);
-    putText(output, "orange", Point(rectOrange.x + 15, rectOrange.y + 10), 1, 1, Scalar(0, 0, 0));
+    Rect rectBlue(bg.x + 5, bg.y + 5, 10, 10);
+    rectangle(output, rectBlue, config->blue, -1);
+    putText(output, "blue", Point(rectBlue.x + 15, rectBlue.y + 10), 1, 1, Scalar(0, 0, 0));
 
-    Rect rectGreen(bg.x + 5, bg.y + 20, 10, 10);
+    Rect rectRed(bg.x + 5, bg.y + 20, 10, 10);
+    rectangle(output, rectRed, config->red, -1);
+    putText(output, "red", Point(rectRed.x + 15, rectRed.y + 10), 1, 1, Scalar(0, 0, 0));
+
+    Rect rectGreen(bg.x + 5, bg.y + 35, 10, 10);
     rectangle(output, rectGreen, config->green, -1);
     putText(output, "green", Point(rectGreen.x + 15, rectGreen.y + 10), 1, 1, Scalar(0, 0, 0));
 }

@@ -161,6 +161,9 @@ void *ProcessThread::process() {
         pthread_exit(nullptr);
     }
 
+    m_video->set(CV_CAP_PROP_FRAME_WIDTH, m_config->cameraResolution.width);
+    m_video->set(CV_CAP_PROP_FRAME_HEIGHT, m_config->cameraResolution.height);
+
     bool stop = false;
     bool noWait = true;
     string action;
@@ -216,6 +219,7 @@ void *ProcessThread::process() {
  */
 void ProcessThread::processIdle() {
     const int wait = 2;
+    int i = 1;
     string action;
 
     while (true) {
@@ -236,9 +240,20 @@ void ProcessThread::processIdle() {
             spdlog::info("Photo !");
 
             pthread_mutex_lock(&m_datasMutex);
-            m_imgOrig = source;
+            if (m_config->swapRgb) {
+                m_imgOrig = Mat();
+                cvtColor(source, m_imgOrig, COLOR_RGB2BGR);
+            } else {
+                m_imgOrig = source;
+            }
             pthread_mutex_unlock(&m_datasMutex);
+
+            if (m_config->debug) {
+                imwrite(m_config->outputPrefix + "source-idle-" + to_string(i) + ".jpg", m_imgOrig);
+            }
         }
+
+        i++;
 
         this_thread::sleep_for(chrono::seconds(wait));
     }
@@ -262,7 +277,18 @@ void ProcessThread::processEtallonage() {
         if (!source.data) {
             spdlog::error("Could not open or find the image");
         } else {
-            ok = etallonage.run(source, i);
+            Mat image;
+            if (m_config->swapRgb) {
+                cvtColor(source, image, COLOR_RGB2BGR);
+            } else {
+                image = source;
+            }
+
+            if (m_config->debug) {
+                imwrite(m_config->outputPrefix + "source-etallonage-" + to_string(i) + ".jpg", image);
+            }
+
+            ok = etallonage.run(image, i);
         }
 
         i++;
@@ -300,11 +326,23 @@ void ProcessThread::processDetection() {
         if (!source.data) {
             spdlog::error("Could not open or find the image");
         } else {
-            json r = detection.run(source, i);
+            pthread_mutex_lock(&m_datasMutex);
+            if (m_config->swapRgb) {
+                m_imgOrig = Mat();
+                cvtColor(source, m_imgOrig, COLOR_RGB2BGR);
+            } else {
+                m_imgOrig = source;
+            }
+            pthread_mutex_unlock(&m_datasMutex);
+
+            if (m_config->debug) {
+                imwrite(m_config->outputPrefix + "source-detecion-" + to_string(i) + ".jpg", m_imgOrig);
+            }
+
+            json r = detection.run(m_imgOrig, i);
 
             pthread_mutex_lock(&m_datasMutex);
             m_detectionResult = r;
-            m_imgOrig = source;
             pthread_mutex_unlock(&m_datasMutex);
         }
 

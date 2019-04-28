@@ -19,6 +19,8 @@ bool Config::readConfigFile(const String &filename) {
     }
 
     fs["cameraIndex"] >> cameraIndex;
+    fs["cameraResolution"] >> cameraResolution;
+    fs["swapRgb"] >> swapRgb;
     fs["boardSize"] >> boardSize;
     fs["boardRatio"] >> boardRatio;
     fs["yCorrection"] >> yCorrection;
@@ -28,8 +30,11 @@ bool Config::readConfigFile(const String &filename) {
     FileNode markersPosNode = fs["markersPos"];
     readConfigVector<Point>(markersPos, markersPosNode);
 
-    FileNode orangeRefsNode = fs["orangeRefs"];
-    readConfigVector<Point>(orangeRefs, orangeRefsNode);
+    FileNode blueRefsNode = fs["blueRefs"];
+    readConfigVector<Point>(blueRefs, blueRefsNode);
+
+    FileNode redRefsNode = fs["redRefs"];
+    readConfigVector<Point>(redRefs, redRefsNode);
 
     FileNode greenRefsNode = fs["greenRefs"];
     readConfigVector<Point>(greenRefs, greenRefsNode);
@@ -62,7 +67,8 @@ bool Config::readEtallonageFile(const String &filename) {
 
     fs["homography"] >> homography;
     fs["green"] >> green;
-    fs["orange"] >> orange;
+    fs["blue"] >> blue;
+    fs["red"] >> red;
 
     return true;
 }

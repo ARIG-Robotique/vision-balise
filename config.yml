@@ -3,17 +3,23 @@
 # index de la camera
 cameraIndex: 0
 
+# résolution des photos brutes (NE PAS CHANGER, ou le driver video crash)
+cameraResolution: [ 2592, 1944 ]
+
+# procède à une conversion RGB -> BGR après lecture depuis la caméra
+swapRgb: true
+
 # taille réelle de la table en millimètres
-boardSize: [ 820, 610 ]
+boardSize: [ 3000, 2000 ]
 
 # ratio à appliquer à la taille réelle pour créer l'image de travail
-boardRatio: 1
+boardRatio: 0.5
 
 # offset vertical a appliquer aux objets détectés (prendre en compte boardRatio)
 yCorrection: 15
 
 # diamètre réel des objets à détecter en millimètres
-diametreObjet: 40
+diametreObjet: 76
 
 # largeur des sondes de culeur en pixels
 probeSize: 20
@@ -28,11 +34,14 @@ markersPos:
    - [ 600, 150 ]
 
 # position des pallets connus
-orangeRefs:
+blueRefs:
   - [ 170, 80 ]
 
 greenRefs:
   - [ 280, 240 ]
+
+redRefs:
+  - [ 170, 80 ]
 
 # listes des zones dans lequelles il peut y avoir des objets
 detectZones:

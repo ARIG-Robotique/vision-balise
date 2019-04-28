@@ -18,19 +18,23 @@ public:
 
     // from config
     int cameraIndex;
+    Size cameraResolution;
     Size boardSize;
+    bool swapRgb;
     float boardRatio;
     int yCorrection;
     int diametreObjet;
     int probeSize;
     vector<Point> markersPos;
-    vector<Point> orangeRefs;
+    vector<Point> blueRefs;
+    vector<Point> redRefs;
     vector<Point> greenRefs;
     vector<Rect> detectZones;
 
     // runtime
     Mat homography;
-    Scalar orange;
+    Scalar blue;
+    Scalar red;
     Scalar green;
 
     bool readConfigFile(const String &filename);

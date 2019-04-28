@@ -19,17 +19,22 @@ json Detection::run(const Mat &source, int index) {
                     Size(config->boardSize.width * config->boardRatio, config->boardSize.height * config->boardRatio));
 
     // detection
-    vector<Point> foundOrange, verifiedOrange;
-    detectColor(undistorted, config->orange, config->orangeRefs, foundOrange, verifiedOrange);
+    vector<Point> foundBlue, verifiedBlue;
+    detectColor(undistorted, config->blue, config->blueRefs, foundBlue, verifiedBlue);
+
+    vector<Point> foundRed, verifiedRed;
+    detectColor(undistorted, config->red, config->redRefs, foundRed, verifiedRed);
 
     vector<Point> foundGreen, verifiedGreen;
     detectColor(undistorted, config->green, config->greenRefs, foundGreen, verifiedGreen);
 
     if (config->debug) {
-        drawObjects(undistorted, foundOrange, "Orange", config->orange);
+        drawObjects(undistorted, foundBlue, "Blue", config->blue);
+        drawObjects(undistorted, foundRed, "Red", config->red);
         drawObjects(undistorted, foundGreen, "Green", config->green);
 
-        drawObjects(undistorted, verifiedOrange, "Still orange", config->orange);
+        drawObjects(undistorted, verifiedBlue, "Still blue", config->blue);
+        drawObjects(undistorted, verifiedRed, "Still red", config->red);
         drawObjects(undistorted, verifiedGreen, "Still green", config->green);
 
         imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", undistorted);
@@ -40,9 +45,11 @@ json Detection::run(const Mat &source, int index) {
         waitKey(0);
     }
 
-    r["foundOrange"] = arig_utils::points2json(foundOrange);
+    r["foundBlue"] = arig_utils::points2json(foundBlue);
+    r["foundRed"] = arig_utils::points2json(foundRed);
     r["foundGreen"] = arig_utils::points2json(foundGreen);
-    r["verifiedOrange"] = arig_utils::points2json(verifiedOrange);
+    r["verifiedBlue"] = arig_utils::points2json(verifiedBlue);
+    r["verifiedRed"] = arig_utils::points2json(verifiedRed);
     r["verifiedGreen"] = arig_utils::points2json(verifiedGreen);
 
     spdlog::debug("DETECTION RESULT\n {}", r.dump(2));

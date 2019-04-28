@@ -3,10 +3,10 @@
 
 ## Description
 
-Ce projet ouvre un socket TCP sur le port 40000 afin de recevoir des ordres
+Ce projet ouvre un socket TCP sur le port 9042 afin de recevoir des ordres
 JSON pour piloter la récupération des information avec [OpenCV](https://opencv.org/)
 
-Rendre la camera accessible par OpenCV : 
+Rendre la camera accessible par OpenCV :
 ```bash
 $ sudo modprobe bcm2835-v4l2
 ```
@@ -20,7 +20,7 @@ $ sudo modprobe bcm2835-v4l2
 - `--calibration-dir=samples/calib/` : dossier contenant les photos source pour la calibration
 - `--calibration-file=calibration.yml` : fichier de résultat de calibration
 - `--etallonage` : lance l'étallonage one-shot
-- `--etallonage-file=` : fichier de résultat de l'étallonage
+- `--etallonage-file` : fichier de résultat de l'étallonage
 - `--config-file=config.yml` : fichier de configuration
 - `--socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
 - `--socket-port=9042` : port pour le socket inet

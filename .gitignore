@@ -57,3 +57,4 @@ fabric.properties
 ### Project specific
 build*/
 download/
+output/

@@ -4,6 +4,7 @@
 #include "SocketHelper.h"
 #include "ProcessThread.h"
 #include "tester.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 int main(int argc, char **argv) {
     const String keys =
@@ -29,28 +30,38 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    spdlog::set_level(parser.has("debug") ? spdlog::level::debug : spdlog::level::info);
-
-    spdlog::info("Start vision balise");
-
-    Config config;
-    config.debug = parser.has("debug") || parser.has("test");
-    config.testMode = parser.has("test");
-    config.outputDir = parser.get<string>("output-dir");
-
+    // construit la date d'execution
     time_t now = time(nullptr);
     tm *ptm = localtime(&now);
     char timeBuffer[14];
     strftime(timeBuffer, 14, "%Y%m%d%H%M%S", ptm);
 
-    config.outputPrefix = config.outputDir + timeBuffer + "-";
-    spdlog::debug("Image output prefix is {}", config.outputPrefix.c_str());
+    const String outputDir = parser.get<string>("output-dir");
+    const String outputPrefix = outputDir + timeBuffer + "-";
+
+    // configuration du logger
+    auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log");
+    spdlog::default_logger()->sinks().push_back(file_sink);
+    spdlog::flush_every(std::chrono::seconds(1));
+    spdlog::set_level(parser.has("debug") ? spdlog::level::debug : spdlog::level::info);
+
+    // démarrage
+    spdlog::info("Start vision balise");
+    spdlog::debug("Output prefix is {}", outputPrefix.c_str());
+
+    // configuration globale
+    Config config;
+    config.debug = parser.has("debug") || parser.has("test");
+    config.testMode = parser.has("test");
+    config.outputDir = outputDir;
+    config.outputPrefix = outputPrefix;
 
     const String configFilename = parser.get<String>("config-file");
     const String calibFilename = parser.get<String>("calibration-file");
     const String calibDir = parser.get<String>("calibration-dir");
     const String etallonageFilename = parser.get<String>("etallonage-file");
 
+    // calibration
     if (parser.has("calibration")) {
         Calibration calibration;
 
@@ -60,6 +71,7 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+    // lecture de la calibration
     if (!config.readCalibrationFile(calibFilename)) {
         spdlog::warn("Not calibrated, please run --calibration");
         return 2;
@@ -70,6 +82,13 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+    // mode de test
+    if (config.testMode) {
+        runTest(&config);
+        return 0;
+    }
+
+    // etallonage
     if (parser.has("etallonage")) {
         if (etallonageFilename.empty()) {
             spdlog::error("No etallonage file provided");
@@ -84,16 +103,13 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    if (config.testMode) {
-        runTest(&config);
-        return 0;
-    }
-
+    // lecture de l'etallonage
     if (!etallonageFilename.empty() && !config.readEtallonageFile(etallonageFilename)) {
         spdlog::error("Cannot read provided etallonage file");
         return 2;
     }
 
+    // ouverture de la socket
     SocketHelper socket(parser.get<string>("socket-type"));
     if (socket.isUnknown()) {
         spdlog::error("Invalid socket type");
@@ -108,6 +124,7 @@ int main(int argc, char **argv) {
 
     socket.init();
 
+    // création du thread de processing
     ProcessThread processThread(&config);
     if (!processThread.isReady()) {
         spdlog::error("Cannot create OpenCV thread");
@@ -120,6 +137,7 @@ int main(int argc, char **argv) {
         processThread.setEtallonageOk();
     }
 
+    // boucle de commande
     bool stop = false, waitConnection = true;
     while (!stop) {
         if (waitConnection) {
