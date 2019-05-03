@@ -33,11 +33,11 @@ int main(int argc, char **argv) {
     // construit la date d'execution
     time_t now = time(nullptr);
     tm *ptm = localtime(&now);
-    char timeBuffer[14];
-    strftime(timeBuffer, 14, "%Y%m%d%H%M%S", ptm);
+    char timeBuffer[15];
+    strftime(timeBuffer, 15, "%Y%m%d%H%M%S", ptm);
 
     const String outputDir = parser.get<string>("output-dir");
-    const String outputPrefix = outputDir + timeBuffer + "-";
+    const String outputPrefix = outputDir + String(timeBuffer) + "-";
 
     // configuration du logger
     auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log");
