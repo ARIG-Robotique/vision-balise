@@ -19,8 +19,6 @@ $ sudo modprobe bcm2835-v4l2
 - `--calibration` : lance la calibration de l'objectif
 - `--calibration-dir=samples/calib/` : dossier contenant les photos source pour la calibration
 - `--calibration-file=calibration.yml` : fichier de résultat de calibration
-- `--etallonage` : lance l'étallonage one-shot
-- `--etallonage-file` : fichier de résultat de l'étallonage
 - `--config-file=config.yml` : fichier de configuration
 - `--socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
 - `--socket-port=9042` : port pour le socket inet
@@ -45,7 +43,7 @@ $ sudo modprobe bcm2835-v4l2
 }
 ```
 
-### Récupérer le statut (etallonage ok + résultat détection)
+### Récupérer le statut
 
 * Query
 ```json
@@ -59,43 +57,8 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
-        "etallonageOk": true,
-        "detection": {
-            "foundGreen": [
-                {"x": 100, "y": 100}
-            ],
-            "foundRed": [
-                {"x": 100, "y": 100}
-            ],
-            "foundBlue": [
-                {"x": 100, "y": 100}
-            ],
-            "verifiedGreen": [
-                {"x": 100, "y": 100}
-            ],
-            "verifiedRed": [
-                {"x": 100, "y": 100}
-            ],
-            "verifiedBlue": [
-                {"x": 100, "y": 100}
-            ]
-        }
+        "detection": {}
     }
-}
-```
-
-### Lancer l'étallonage
-
-* Query
-```json
-{"action": "ETALLONAGE"}
-```
-
-* Réponse
-```json
-{
- "status": "OK",
- "action": "ETALLONAGE"
 }
 ```
 

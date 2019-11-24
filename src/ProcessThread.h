@@ -14,7 +14,6 @@ private:
 
     bool m_ready = false;
     bool m_cameraReady = false;
-    bool m_etallonageOk = false;
     json m_detectionResult;
     Mat m_imgOrig;
 
@@ -27,15 +26,10 @@ private:
 public:
     explicit ProcessThread(Config* config);
 
-    void setEtallonageOk() {
-        m_etallonageOk = true;
-    }
-
     bool isReady();
     JsonResult getStatus();
     JsonResult getPhoto(int width);
 
-    JsonResult startEtallonage();
     JsonResult startDetection();
 
     JsonResult exit();
@@ -47,7 +41,6 @@ private:
     JsonResult action(const char *_action);
 
     void processIdle();
-    void processEtallonage();
     void processDetection();
 };
 

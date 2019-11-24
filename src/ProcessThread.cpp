@@ -1,6 +1,5 @@
 #include <thread>
 #include "ProcessThread.h"
-#include "Etallonage.h"
 #include "Detection.h"
 #include "utils.h"
 
@@ -31,7 +30,6 @@ JsonResult ProcessThread::getStatus() {
 
     pthread_mutex_lock(&m_datasMutex);
     datas["cameraReady"] = m_cameraReady;
-    datas["etallonageOk"] = m_etallonageOk;
     datas["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_datasMutex);
 
@@ -75,31 +73,10 @@ JsonResult ProcessThread::getPhoto(int width) {
 }
 
 /**
- * Démarre l'étalonnage dans le sous process
- * @return
- */
-JsonResult ProcessThread::startEtallonage() {
-    return action(ACTION_ETALLONAGE);
-}
-
-/**
  * Démarre la détection dans le sous process
  * @return
  */
 JsonResult ProcessThread::startDetection() {
-    bool etallonageOk;
-
-    pthread_mutex_lock(&m_datasMutex);
-    etallonageOk = m_etallonageOk;
-    pthread_mutex_unlock(&m_datasMutex);
-
-    if (!etallonageOk) {
-        JsonResult r;
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "L'étallonage n'est pas terminé/en échec";
-        return r;
-    }
-
     return action(ACTION_DETECTION);
 }
 
@@ -189,17 +166,6 @@ void *ProcessThread::process() {
 
             noWait = true;
 
-        } else if (action == ACTION_ETALLONAGE) {
-            spdlog::info("ProcessThread: Démarrage de l'étallonage");
-            processEtallonage();
-
-            // on repasse en idle tout de suite
-            pthread_mutex_lock(&m_actionMutex);
-            m_action = ACTION_IDLE;
-            pthread_mutex_unlock(&m_actionMutex);
-
-            noWait = true;
-
         } else if (action == ACTION_DETECTION) {
             spdlog::info("ProcessThread: Démarrage de la détection");
             processDetection();
@@ -257,48 +223,6 @@ void ProcessThread::processIdle() {
 
         this_thread::sleep_for(chrono::seconds(wait));
     }
-}
-
-/**
- * Boucle d'étallonage
- */
-void ProcessThread::processEtallonage() {
-    Etallonage etallonage(m_config);
-
-    const int tries = 4;
-    const int wait = 2;
-    bool ok = false;
-    int i = 0;
-
-    while (!ok && i < tries) {
-        Mat source;
-        m_video->read(source);
-
-        if (!source.data) {
-            spdlog::error("Could not open or find the image");
-        } else {
-            Mat image;
-            if (m_config->swapRgb) {
-                cvtColor(source, image, COLOR_RGB2BGR);
-            } else {
-                image = source;
-            }
-
-            if (m_config->debug) {
-                imwrite(m_config->outputPrefix + "source-etallonage-" + to_string(i) + ".jpg", image);
-            }
-
-            ok = etallonage.run(image, i);
-        }
-
-        i++;
-
-        this_thread::sleep_for(chrono::seconds(wait));
-    }
-
-    pthread_mutex_lock(&m_datasMutex);
-    m_etallonageOk = ok;
-    pthread_mutex_unlock(&m_datasMutex);
 }
 
 /**
