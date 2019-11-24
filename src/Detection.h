@@ -14,7 +14,11 @@ public:
     json run(const Mat &source, int index);
 
 private:
+    void findMarkers(const Mat &image, vector<vector<Point2f>> &markerCorners, vector<int> &markerIds);
 
+    vector<Point2f> getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id);
+
+    bool isMarkerUpside(vector<Point2f> &marker);
 };
 
 

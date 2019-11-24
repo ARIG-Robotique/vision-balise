@@ -57,10 +57,14 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
-        "detection": {}
+        "detection": {
+            "direction": "UP"
+        }
     }
 }
 ```
+
+Les directions possibles sont `UP`, `DOWN` et `UNKOWN`.
 
 ### Lancer la détection
 

@@ -20,7 +20,6 @@ private:
     pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
 
     string m_action;
-    pthread_cond_t m_actionCond = PTHREAD_COND_INITIALIZER;
     pthread_mutex_t m_actionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 public:

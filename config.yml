@@ -8,3 +8,6 @@ cameraResolution: [ 2592, 1944 ]
 
 # procède à une conversion RGB -> BGR après lecture depuis la caméra
 swapRgb: true
+
+# Identifiant du marqueur à détecter
+markerId: 17

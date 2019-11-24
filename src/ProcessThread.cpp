@@ -98,7 +98,6 @@ JsonResult ProcessThread::action(const char *_action) {
 
     pthread_mutex_lock(&m_actionMutex);
     m_action = string(_action);
-    pthread_cond_signal(&m_actionCond);
     pthread_mutex_unlock(&m_actionMutex);
 
     JsonResult r;
@@ -142,16 +141,10 @@ void *ProcessThread::process() {
     m_video->set(CV_CAP_PROP_FRAME_HEIGHT, m_config->cameraResolution.height);
 
     bool stop = false;
-    bool noWait = true;
     string action;
 
     while (!stop) {
         pthread_mutex_lock(&m_actionMutex);
-        if (noWait) {
-            noWait = false;
-        } else {
-            pthread_cond_wait(&m_actionCond, &m_actionMutex);
-        }
         action = m_action;
         pthread_mutex_unlock(&m_actionMutex);
 
@@ -164,13 +157,9 @@ void *ProcessThread::process() {
             spdlog::info("ProcessThread: Démarrage de la prise de photo");
             processIdle();
 
-            noWait = true;
-
         } else if (action == ACTION_DETECTION) {
             spdlog::info("ProcessThread: Démarrage de la détection");
             processDetection();
-
-            noWait = true;
 
         } else {
             spdlog::warn("ProcessThread: action non supportée");
@@ -232,8 +221,8 @@ void ProcessThread::processDetection() {
     Detection detection(m_config);
 
     const int wait = 2;
-    string action;
     int i = 0;
+    string action;
 
     while (true) {
         pthread_mutex_lock(&m_actionMutex);

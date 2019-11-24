@@ -20,6 +20,7 @@ public:
     int cameraIndex;
     Size cameraResolution;
     bool swapRgb;
+    int markerId;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);

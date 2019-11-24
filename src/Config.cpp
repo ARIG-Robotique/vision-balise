@@ -21,6 +21,7 @@ bool Config::readConfigFile(const String &filename) {
     fs["cameraIndex"] >> cameraIndex;
     fs["cameraResolution"] >> cameraResolution;
     fs["swapRgb"] >> swapRgb;
+    fs["markerId"] >> markerId;
 
     return true;
 }
