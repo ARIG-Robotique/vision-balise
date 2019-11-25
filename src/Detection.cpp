@@ -21,6 +21,11 @@ json Detection::run(const Mat &source, int index) {
 
     vector<Point2f> marker = getMarkerById(markerCorners, markerIds, config->markerId);
 
+    if (config->debug) {
+        aruco::drawDetectedMarkers(undistorted, markerCorners, markerIds);
+        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", undistorted);
+    }
+
     if (marker.empty()) {
         spdlog::info("Marker not found");
         r["direction"] = "UNKNOWN";
@@ -29,7 +34,7 @@ json Detection::run(const Mat &source, int index) {
         r["direction"] = upside ? "UP" : "DOWN";
     }
 
-    spdlog::debug("DETECTION RESULT\n {}", r.dump(2));
+    spdlog::debug("DETECTION {} RESULT\n {}", to_string(index), r.dump(2));
 
     return r;
 }
@@ -96,5 +101,5 @@ bool Detection::isMarkerUpside(vector<Point2f> &marker) {
     float y3 = marker.at(3).y;
     float x0 = marker.at(0).x;
     float x1 = marker.at(1).x;
-    return y0 > y3 && x0 < x1;
+    return y0 < y3 && x0 < x1;
 }
