@@ -22,6 +22,7 @@ bool Config::readConfigFile(const String &filename) {
     fs["cameraResolution"] >> cameraResolution;
     fs["swapRgb"] >> swapRgb;
     fs["markerId"] >> markerId;
+    fs["probeSize"] >> probeSize;
 
     return true;
 }

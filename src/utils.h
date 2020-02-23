@@ -16,6 +16,8 @@ namespace arig_utils {
 
     json points2json(vector<Point> points);
 
+    json scalar2json(Scalar scalar);
+
     string basename(string const & path);
 
     string matToBase64(const Mat &mat);

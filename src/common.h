@@ -25,6 +25,7 @@ using json = nlohmann::json;
 #define ACTION_PHOTO "PHOTO"
 #define ACTION_IDLE "IDLE"
 #define ACTION_DETECTION "DETECTION"
+#define ACTION_ETALONNAGE "ETALONNAGE"
 
 struct JsonResult {
     string status;

@@ -11,3 +11,6 @@ swapRgb: true
 
 # Identifiant du marqueur à détecter
 markerId: 17
+
+# largeur des sondes de couleur en pixels
+probeSize: 20

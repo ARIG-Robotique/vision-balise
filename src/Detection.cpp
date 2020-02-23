@@ -10,21 +10,18 @@ json Detection::run(const Mat &source, int index) {
 
     json r;
 
-    // correction de l'objectif
-    Mat undistorted;
-    undistort(source, undistorted, config->cameraMatrix, config->distCoeffs);
-
     // recherche des marqueurs
     vector<int> markerIds;
     vector<vector<Point2f>> markerCorners;
-    findMarkers(undistorted, markerCorners, markerIds);
-
-    vector<Point2f> marker = getMarkerById(markerCorners, markerIds, config->markerId);
+    findMarkers(source, markerCorners, markerIds);
 
     if (config->debug) {
-        aruco::drawDetectedMarkers(undistorted, markerCorners, markerIds);
-        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", undistorted);
+        Mat output = source.clone();
+        aruco::drawDetectedMarkers(output, markerCorners, markerIds);
+        imwrite(config->outputPrefix + "detection-markers-" + to_string(index) + ".jpg", output);
     }
+
+    vector<Point2f> marker = getMarkerById(markerCorners, markerIds, config->markerId);
 
     if (marker.empty()) {
         spdlog::info("Marker not found");
@@ -32,6 +29,12 @@ json Detection::run(const Mat &source, int index) {
     } else {
         bool upside = isMarkerUpside(marker);
         r["direction"] = upside ? "UP" : "DOWN";
+    }
+
+    // lecture des couleurs
+    if (config->etalonnageDone) {
+        vector<string> colors = readColors(source);
+        r["colors"] = colors;
     }
 
     spdlog::debug("DETECTION {} RESULT\n {}", to_string(index), r.dump(2));
@@ -86,7 +89,7 @@ vector<Point2f> Detection::getMarkerById(vector<vector<Point2f>> &markerCorners,
 
 /**
  * Vérifie si un marqueur est plutot orienté vers le haut de l'image
- * Evo possible  uriliser estimatePoseSingleMarkers
+ * Evo possible  utiliser estimatePoseSingleMarkers
  * @param marker
  * @return
  */
@@ -102,4 +105,35 @@ bool Detection::isMarkerUpside(vector<Point2f> &marker) {
     float x0 = marker.at(0).x;
     float x1 = marker.at(1).x;
     return y0 < y3 && x0 < x1;
+}
+
+/**
+ * Lecture des trois couleurs entre bouées verte et rouge
+ */
+vector<string> Detection::readColors(const Mat &image) {
+    vector<string> colors;
+
+    int dX = config->redPoint.x - config->greenPoint.x;
+    int dY = config->redPoint.y - config->greenPoint.y;
+
+    for (unsigned int i = 1; i <= 3; i++) {
+        Point pt = Point(config->greenPoint.x + dX / 5.0 * i, config->greenPoint.y + dY / 5.0 * i);
+        Scalar color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
+        int hue = arig_utils::ScalarBGR2HSV(color)[0];
+
+        int dRed = abs(hue - config->red[0]);
+        dRed = min(dRed, 180 - dRed);
+        int dGreen = abs(hue - config->green[0]);
+        dGreen = min(dGreen, 180 - dGreen);
+
+        if (dRed < 42) {
+            colors.emplace_back("RED");
+        } else if (dGreen < 42) {
+            colors.emplace_back("GREEN");
+        } else {
+            colors.emplace_back("UNKNOWN");
+        }
+    }
+
+    return colors;
 }

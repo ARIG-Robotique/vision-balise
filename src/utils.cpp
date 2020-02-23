@@ -57,6 +57,10 @@ namespace arig_utils {
         return arr;
     }
 
+    json scalar2json(Scalar scalar) {
+        return json({ scalar[0], scalar[1], scalar[2] });
+    }
+
     string basename(string const & path) {
         return path.substr(path.find_last_of("/\\") + 1);
     }

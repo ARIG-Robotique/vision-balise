@@ -19,6 +19,8 @@ private:
     vector<Point2f> getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id);
 
     bool isMarkerUpside(vector<Point2f> &marker);
+
+    vector<string> readColors(const Mat &image);
 };
 
 

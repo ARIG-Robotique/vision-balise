@@ -1,6 +1,7 @@
 #include <thread>
 #include "ProcessThread.h"
 #include "Detection.h"
+#include "Etalonnage.h"
 #include "utils.h"
 
 ProcessThread::ProcessThread(Config *config) {
@@ -31,6 +32,7 @@ JsonResult ProcessThread::getStatus() {
     pthread_mutex_lock(&m_datasMutex);
     datas["cameraReady"] = m_cameraReady;
     datas["detection"] = m_detectionResult;
+    datas["etallonage"] = m_etalonnageResult;
     pthread_mutex_unlock(&m_datasMutex);
 
     JsonResult r;
@@ -78,6 +80,14 @@ JsonResult ProcessThread::getPhoto(int width) {
  */
 JsonResult ProcessThread::startDetection() {
     return action(ACTION_DETECTION);
+}
+
+/**
+ * Démarre l'étalonnage dans le sous process
+ * @return
+ */
+JsonResult ProcessThread::startEtalonnage() {
+    return action(ACTION_ETALONNAGE);
 }
 
 /**
@@ -157,6 +167,14 @@ void *ProcessThread::process() {
             spdlog::info("ProcessThread: Démarrage de la prise de photo");
             processIdle();
 
+        } else if (action == ACTION_ETALONNAGE) {
+            spdlog::info("ProcessThread: Démarrage de l'étallonage");
+            processEtalonnage();
+
+            pthread_mutex_lock(&m_actionMutex);
+            action = ACTION_IDLE;
+            pthread_mutex_unlock(&m_actionMutex);
+
         } else if (action == ACTION_DETECTION) {
             spdlog::info("ProcessThread: Démarrage de la détection");
             processDetection();
@@ -167,6 +185,36 @@ void *ProcessThread::process() {
     }
 
     pthread_exit(nullptr);
+}
+
+bool ProcessThread::takePhoto(const string &name) {
+    Mat source;
+    m_video->read(source);
+
+    if (!source.data) {
+        spdlog::error("Could not open or find the image");
+        return false;
+    } else {
+        Mat undistorted;
+        undistort(source, undistorted, m_config->cameraMatrix, m_config->distCoeffs);
+
+        Mat final;
+        if (m_config->swapRgb) {
+            cvtColor(undistorted, final, COLOR_RGB2BGR);
+        } else {
+            final = undistorted;
+        }
+
+        if (m_config->debug) {
+            imwrite(m_config->outputPrefix + "source-" + name + ".jpg", final);
+        }
+
+        pthread_mutex_lock(&m_datasMutex);
+        m_imgOrig = final;
+        pthread_mutex_unlock(&m_datasMutex);
+
+        return true;
+    }
 }
 
 /**
@@ -186,31 +234,28 @@ void ProcessThread::processIdle() {
             break;
         }
 
-        Mat source;
-        m_video->read(source);
-
-        if (!source.data) {
-            spdlog::error("Could not open or find the image");
-        } else {
+        if (takePhoto("idle-" + to_string(i))) {
             spdlog::info("Photo !");
-
-            pthread_mutex_lock(&m_datasMutex);
-            if (m_config->swapRgb) {
-                m_imgOrig = Mat();
-                cvtColor(source, m_imgOrig, COLOR_RGB2BGR);
-            } else {
-                m_imgOrig = source;
-            }
-            pthread_mutex_unlock(&m_datasMutex);
-
-            if (m_config->debug) {
-                imwrite(m_config->outputPrefix + "source-idle-" + to_string(i) + ".jpg", m_imgOrig);
-            }
         }
 
         i++;
 
         this_thread::sleep_for(chrono::seconds(wait));
+    }
+}
+
+/**
+ * Procède à l'étalonnage
+ */
+void ProcessThread::processEtalonnage() {
+    Etalonnage etalonnage(m_config);
+
+    if (takePhoto("etalonnage")) {
+        json r = etalonnage.run(m_imgOrig);
+
+        pthread_mutex_lock(&m_datasMutex);
+        m_etalonnageResult = r;
+        pthread_mutex_unlock(&m_datasMutex);
     }
 }
 
@@ -233,25 +278,7 @@ void ProcessThread::processDetection() {
             break;
         }
 
-        Mat source;
-        m_video->read(source);
-
-        if (!source.data) {
-            spdlog::error("Could not open or find the image");
-        } else {
-            pthread_mutex_lock(&m_datasMutex);
-            if (m_config->swapRgb) {
-                m_imgOrig = Mat();
-                cvtColor(source, m_imgOrig, COLOR_RGB2BGR);
-            } else {
-                m_imgOrig = source;
-            }
-            pthread_mutex_unlock(&m_datasMutex);
-
-            if (m_config->debug) {
-                imwrite(m_config->outputPrefix + "source-detecion-" + to_string(i) + ".jpg", m_imgOrig);
-            }
-
+        if (takePhoto("detection-" + to_string(i))) {
             json r = detection.run(m_imgOrig, i);
 
             pthread_mutex_lock(&m_datasMutex);

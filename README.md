@@ -22,7 +22,7 @@ $ sudo modprobe bcm2835-v4l2
 - `--config-file=config.yml` : fichier de configuration
 - `--socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
 - `--socket-port=9042` : port pour le socket inet
-- `--socket-file=/tmp/vishi_bbalise.sock` : fichier pour le socket unix
+- `--socket-file=/tmp/vision_balise.sock` : fichier pour le socket unix
 
 
 ## Messages JSON
@@ -31,8 +31,15 @@ $ sudo modprobe bcm2835-v4l2
 
 * Query
 ```json
-{"action":"PHOTO"}
+{
+  "action":"PHOTO",
+  "datas": {
+    "width": 1296
+  }
+}
 ```
+
+`width` vaut par défaut `1296`.
 
 * Réponse
 ```json
@@ -57,14 +64,47 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
+        "etallonnage": {
+            "done": true,
+            "red": [60, 20, 50],   
+            "green": [60, 20, 50]  
+        },
         "detection": {
-            "direction": "UP"
+            "direction": "UP",
+            "colors": ["GREEN", "RED", "RED"]
         }
     }
 }
 ```
 
-Les directions possibles sont `UP`, `DOWN` et `UNKOWN`.
+Les directions possibles sont `UP`, `DOWN` et `UNKNOWN`.  
+Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN.
+
+`colors` n'est dispo que si l'étalonnage à été fait.  
+Les couleurs d'étalonnage sont en HSV (H sur 0-179).
+
+### Lancer l'étalonnage
+
+* Query
+```json
+{
+    "action": "ETALONNAGE",
+    "datas": {
+        "redPoint": [500, 400],
+        "greenPoint": [500, 500]
+    }
+}
+```
+
+Les points sont attendus dans la résolution d'origine (2592 x 1944).
+
+* Réponse
+```json
+{
+ "status": "OK",
+ "action": "ETALONNAGE"
+}
+```
 
 ### Lancer la détection
 
