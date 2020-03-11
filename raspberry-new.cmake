@@ -5,7 +5,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
 
-set(XC_DIR x64-gcc-6.3.1/arm-rpi-linux-gnueabihf)
+set(XC_DIR x64-gcc-6.5.0/arm-rpi-linux-gnueabihf)
 
 # specify the cross compiler
 set(CMAKE_C_COMPILER ${PI_TOOLS_HOME}/${XC_DIR}/bin/arm-rpi-linux-gnueabihf-gcc)

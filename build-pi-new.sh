@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Author : Gregory DEPUILLE
 # Description : Wrapper pour la configuration et le build du projet
-PROJECT="ARIG C++ Vision balise (cross compile Raspberry PI GCC 6.3.1)"
+PROJECT="ARIG C++ Vision balise (cross compile Raspberry PI GCC 6.5.0)"
 
 echo "Build du projet ${PROJECT}"
 
