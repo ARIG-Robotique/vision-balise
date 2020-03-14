@@ -71,14 +71,14 @@ $ sudo modprobe bcm2835-v4l2
         },
         "detection": {
             "direction": "UP",
-            "colors": ["GREEN", "RED", "RED"]
+            "colors": ["GREEN", "RED", "UNKNOWN", "GREEN","RED"]
         }
     }
 }
 ```
 
 Les directions possibles sont `UP`, `DOWN` et `UNKNOWN`.  
-Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN.
+Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
 
 `colors` n'est dispo que si l'étalonnage à été fait.  
 Les couleurs d'étalonnage sont en HSV (H sur 0-179).

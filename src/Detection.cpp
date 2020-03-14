@@ -116,7 +116,7 @@ vector<string> Detection::readColors(const Mat &image) {
     int dX = config->redPoint.x - config->greenPoint.x;
     int dY = config->redPoint.y - config->greenPoint.y;
 
-    for (unsigned int i = 1; i <= 3; i++) {
+    for (unsigned int i = 0; i < 5; i++) {
         Point pt = Point(config->greenPoint.x + dX / 5.0 * i, config->greenPoint.y + dY / 5.0 * i);
         Scalar color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
         int hue = arig_utils::ScalarBGR2HSV(color)[0];
