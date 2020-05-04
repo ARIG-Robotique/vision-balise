@@ -52,11 +52,7 @@ JsonResult ProcessThread::getPhoto(int width) {
     Mat img;
     pthread_mutex_lock(&m_datasMutex);
     if (!m_imgOrig.empty()) {
-        Size size(m_imgOrig.size());
-        if (size.width > width) {
-            size = Size(width, width * size.height / size.width);
-        }
-
+        Size size(width, m_imgOrig.size().height * width / m_imgOrig.size().width);
         resize(m_imgOrig, img, size);
     }
     pthread_mutex_unlock(&m_datasMutex);
