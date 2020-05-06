@@ -32,7 +32,7 @@ JsonResult ProcessThread::getStatus() {
     pthread_mutex_lock(&m_datasMutex);
     datas["cameraReady"] = m_cameraReady;
     datas["detection"] = m_detectionResult;
-    datas["etallonage"] = m_etalonnageResult;
+    datas["etalonnage"] = m_etalonnageResult;
     pthread_mutex_unlock(&m_datasMutex);
 
     JsonResult r;
@@ -168,7 +168,7 @@ void *ProcessThread::process() {
             processEtalonnage();
 
             pthread_mutex_lock(&m_actionMutex);
-            action = ACTION_IDLE;
+            m_action = ACTION_IDLE;
             pthread_mutex_unlock(&m_actionMutex);
 
         } else if (action == ACTION_DETECTION) {

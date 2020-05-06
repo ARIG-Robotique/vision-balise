@@ -149,8 +149,8 @@ int main(int argc, char **argv) {
                 result.status = RESPONSE_ERROR;
                 result.errorMessage = "Invalid red/green points";
             } else {
-                config.redPoint = Point(query.datas["redPoint"]["x"].get<int>(), query.datas["redPoint"]["y"].get<int>());
-                config.greenPoint = Point(query.datas["greenPoint"]["x"].get<int>(), query.datas["greenPoint"]["y"].get<int>());
+                config.redPoint = Point(query.datas["redPoint"][0].get<int>(), query.datas["redPoint"][1].get<int>());
+                config.greenPoint = Point(query.datas["greenPoint"][0].get<int>(), query.datas["greenPoint"][1].get<int>());
                 result = processThread.startEtalonnage();
             }
 

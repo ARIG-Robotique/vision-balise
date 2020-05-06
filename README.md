@@ -64,7 +64,7 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
-        "etallonnage": {
+        "etalonnage": {
             "done": true,
             "red": [60, 20, 50],   
             "green": [60, 20, 50]  
