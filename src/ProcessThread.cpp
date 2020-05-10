@@ -187,11 +187,24 @@ void *ProcessThread::process() {
 }
 
 bool ProcessThread::takePhoto(const string &name) {
+    if (!m_config->mockPhoto.empty()) {
+        pthread_mutex_lock(&m_datasMutex);
+        m_imgOrig = imread(m_config->mockPhoto, CV_LOAD_IMAGE_COLOR);
+        pthread_mutex_unlock(&m_datasMutex);
+
+        if (!m_imgOrig.data) {
+            spdlog::error("Could not open or find the mock image");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     Mat source;
     m_video->read(source);
 
     if (!source.data) {
-        spdlog::error("Could not open or find the image");
+        spdlog::error("Could not open or find the camera");
         return false;
     } else {
         Mat undistorted;

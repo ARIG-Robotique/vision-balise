@@ -11,6 +11,7 @@ public:
     bool testMode = false;
     String outputDir;
     String outputPrefix;
+    String mockPhoto;
 
     // from calibration
     Mat cameraMatrix;

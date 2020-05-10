@@ -23,6 +23,7 @@ $ sudo modprobe bcm2835-v4l2
 - `--socket-type=inet` : type de socket pour la comm, `inet` ou `unix`
 - `--socket-port=9042` : port pour le socket inet
 - `--socket-file=/tmp/vision_balise.sock` : fichier pour le socket unix
+- `--mock-photo=path/to/image.jpg` : fichier de mock de la caméra
 
 
 ## Messages JSON

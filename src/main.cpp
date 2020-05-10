@@ -19,7 +19,8 @@ int main(int argc, char **argv) {
             "{config-file | config.yml | Config file }"
             "{socket-type | inet | Socket type (inet or unix) }"
             "{socket-port | 9042 | Port for inet socket }"
-            "{socket-file | /tmp/vision_balise.sock | File for unix socket }";
+            "{socket-file | /tmp/vision_balise.sock | File for unix socket }"
+            "{mock-photo | | Camera mock file }";
 
     CommandLineParser parser(argc, argv, keys);
     parser.about("ARIG Vision Balise 2020");
@@ -79,6 +80,10 @@ int main(int argc, char **argv) {
     if (!config.readConfigFile(configFilename)) {
         spdlog::error("Unable to load configuration");
         return 2;
+    }
+
+    if (parser.has("mock-photo")) {
+        config.mockPhoto = parser.get<string>("mock-photo");
     }
 
     // mode de test
