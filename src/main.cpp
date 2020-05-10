@@ -5,6 +5,7 @@
 #include "ProcessThread.h"
 #include "tester.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "utils.h"
 
 int main(int argc, char **argv) {
     const String keys =
@@ -145,12 +146,19 @@ int main(int argc, char **argv) {
             result = processThread.getPhoto(width);
 
         } else if (query.action == ACTION_ETALONNAGE) {
-            if (query.datas["redPoint"] == nullptr || query.datas["greenPoint"] == nullptr) {
+            if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2 ||
+                    (query.datas["bouees"] != nullptr && query.datas["bouees"].size() != 8)) {
                 result.status = RESPONSE_ERROR;
-                result.errorMessage = "Invalid red/green points";
+                result.errorMessage = "Invalid points";
             } else {
-                config.redPoint = Point(query.datas["redPoint"][0].get<int>(), query.datas["redPoint"][1].get<int>());
-                config.greenPoint = Point(query.datas["greenPoint"][0].get<int>(), query.datas["greenPoint"][1].get<int>());
+                config.ecueil = arig_utils::json2points(query.datas["ecueil"]);
+
+                if (query.datas["bouees"] != nullptr) {
+                    config.bouees = arig_utils::json2points(query.datas["bouees"]);
+                } else {
+                    config.bouees.clear();
+                }
+
                 result = processThread.startEtalonnage();
             }
 

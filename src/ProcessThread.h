@@ -15,7 +15,6 @@ private:
     bool m_ready = false;
     bool m_cameraReady = false;
     json m_detectionResult;
-    json m_etalonnageResult;
     Mat m_imgOrig;
 
     pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -43,7 +42,6 @@ private:
 
     void processIdle();
     void processDetection();
-    void processEtalonnage();
 
     bool takePhoto(const string &name);
 };

@@ -7,10 +7,13 @@ cameraIndex: 0
 cameraResolution: [ 2592, 1944 ]
 
 # procède à une conversion RGB -> BGR après lecture depuis la caméra
-swapRgb: true
+swapRgb: 1
 
 # Identifiant du marqueur à détecter
 markerId: 17
 
 # largeur des sondes de couleur en pixels
 probeSize: 20
+
+# Seuil de détection de couleurs
+colorThreshold: 42

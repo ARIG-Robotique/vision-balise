@@ -32,7 +32,6 @@ JsonResult ProcessThread::getStatus() {
     pthread_mutex_lock(&m_datasMutex);
     datas["cameraReady"] = m_cameraReady;
     datas["detection"] = m_detectionResult;
-    datas["etalonnage"] = m_etalonnageResult;
     pthread_mutex_unlock(&m_datasMutex);
 
     JsonResult r;
@@ -83,7 +82,19 @@ JsonResult ProcessThread::startDetection() {
  * @return
  */
 JsonResult ProcessThread::startEtalonnage() {
-    return action(ACTION_ETALONNAGE);
+    Etalonnage etalonnage(m_config);
+
+    JsonResult r;
+
+    if (takePhoto("etalonnage")) {
+        r.status = RESPONSE_OK;
+        r.datas = etalonnage.run(m_imgOrig);
+    } else {
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "Impossible de prendre une photo";
+    }
+
+    return r;
 }
 
 /**
@@ -163,14 +174,6 @@ void *ProcessThread::process() {
             spdlog::info("ProcessThread: Démarrage de la prise de photo");
             processIdle();
 
-        } else if (action == ACTION_ETALONNAGE) {
-            spdlog::info("ProcessThread: Démarrage de l'étallonage");
-            processEtalonnage();
-
-            pthread_mutex_lock(&m_actionMutex);
-            m_action = ACTION_IDLE;
-            pthread_mutex_unlock(&m_actionMutex);
-
         } else if (action == ACTION_DETECTION) {
             spdlog::info("ProcessThread: Démarrage de la détection");
             processDetection();
@@ -199,10 +202,6 @@ bool ProcessThread::takePhoto(const string &name) {
             cvtColor(undistorted, final, COLOR_RGB2BGR);
         } else {
             final = undistorted;
-        }
-
-        if (m_config->debug) {
-            imwrite(m_config->outputPrefix + "source-" + name + ".jpg", final);
         }
 
         pthread_mutex_lock(&m_datasMutex);
@@ -237,21 +236,6 @@ void ProcessThread::processIdle() {
         i++;
 
         this_thread::sleep_for(chrono::seconds(wait));
-    }
-}
-
-/**
- * Procède à l'étalonnage
- */
-void ProcessThread::processEtalonnage() {
-    Etalonnage etalonnage(m_config);
-
-    if (takePhoto("etalonnage")) {
-        json r = etalonnage.run(m_imgOrig);
-
-        pthread_mutex_lock(&m_datasMutex);
-        m_etalonnageResult = r;
-        pthread_mutex_unlock(&m_datasMutex);
     }
 }
 

@@ -14,9 +14,13 @@ namespace arig_utils {
 
     Scalar getAverageColor(const Mat &mat, Rect r);
 
-    json points2json(vector<Point> points);
+    json points2json(vector<Point> &points);
+
+    vector<Point> json2points(json &data);
 
     json scalar2json(Scalar scalar);
+
+    json scalars2json(vector<Scalar> &scalars);
 
     string basename(string const & path);
 

@@ -27,6 +27,14 @@ using json = nlohmann::json;
 #define ACTION_DETECTION "DETECTION"
 #define ACTION_ETALONNAGE "ETALONNAGE"
 
+#define COLOR_RED "RED"
+#define COLOR_GREEN "GREEN"
+#define COLOR_UNKNOWN "UNKNOWN"
+
+#define DIR_UP "UP"
+#define DIR_DOWN "DOWN"
+#define DIR_UNKNOWN "UNKNOWN"
+
 struct JsonResult {
     string status;
     string action;

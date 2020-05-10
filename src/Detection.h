@@ -20,7 +20,8 @@ private:
 
     bool isMarkerUpside(vector<Point2f> &marker);
 
-    vector<string> readColors(const Mat &image);
+    vector<string> readColorsEcueil(const Mat &image);
+    vector<string> readColors(const Mat &image, const vector<Point> &points);
 };
 
 

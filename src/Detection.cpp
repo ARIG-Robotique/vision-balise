@@ -6,7 +6,7 @@ Detection::Detection(Config *config) {
 }
 
 json Detection::run(const Mat &source, int index) {
-    spdlog::info("Detection {}", index);
+    spdlog::info("DETECTION {}", index);
 
     json r;
 
@@ -25,19 +25,22 @@ json Detection::run(const Mat &source, int index) {
 
     if (marker.empty()) {
         spdlog::info("Marker not found");
-        r["direction"] = "UNKNOWN";
+        r["direction"] = DIR_UNKNOWN;
     } else {
         bool upside = isMarkerUpside(marker);
-        r["direction"] = upside ? "UP" : "DOWN";
+        r["direction"] = upside ? DIR_UP : DIR_DOWN;
     }
 
     // lecture des couleurs
     if (config->etalonnageDone) {
-        vector<string> colors = readColors(source);
-        r["colors"] = colors;
+        r["ecueil"] = readColorsEcueil(source);
+
+        if (!config->bouees.empty()) {
+            r["bouees"] = readColors(source, config->bouees);
+        }
     }
 
-    spdlog::debug("DETECTION {} RESULT\n {}", to_string(index), r.dump(2));
+    spdlog::debug(r.dump(2));
 
     return r;
 }
@@ -78,7 +81,7 @@ void Detection::findMarkers(const Mat &image, vector<vector<Point2f>> &markerCor
  * @return
  */
 vector<Point2f> Detection::getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id) {
-    for (unsigned short i = 0; i < markerIds.size(); i++) {
+    for (unsigned long i = 0; i < markerIds.size(); i++) {
         if (markerIds.at(i) == id) {
             return markerCorners.at(i);
         }
@@ -108,30 +111,43 @@ bool Detection::isMarkerUpside(vector<Point2f> &marker) {
 }
 
 /**
- * Lecture des trois couleurs entre bouées verte et rouge
+ * Lecture des cinq couleurs de l'ecueil
  */
-vector<string> Detection::readColors(const Mat &image) {
+vector<string> Detection::readColorsEcueil(const Mat &image) {
+    int dX = config->ecueil[1].x - config->ecueil[0].x;
+    int dY = config->ecueil[1].y - config->ecueil[0].y;
+
+    vector<Point> points;
+
+    for (unsigned short i = 0; i < 5; i++) {
+        Point pt = Point(config->ecueil[0].x + dX / 5.0 * i, config->ecueil[0].y + dY / 5.0 * i);
+        points.emplace_back(pt);
+    }
+
+    return readColors(image, points);
+}
+
+/**
+ * Lecture des couleurs d'un ensemble de points
+ */
+vector<string> Detection::readColors(const Mat &image, const vector<Point> &points) {
     vector<string> colors;
 
-    int dX = config->redPoint.x - config->greenPoint.x;
-    int dY = config->redPoint.y - config->greenPoint.y;
-
-    for (unsigned int i = 0; i < 5; i++) {
-        Point pt = Point(config->greenPoint.x + dX / 5.0 * i, config->greenPoint.y + dY / 5.0 * i);
+    for (auto &pt : points) {
         Scalar color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
         int hue = arig_utils::ScalarBGR2HSV(color)[0];
 
-        int dRed = abs(hue - config->red[0]);
+        int dRed = abs(hue - config->colorsEcueil[1][0]);
         dRed = min(dRed, 180 - dRed);
-        int dGreen = abs(hue - config->green[0]);
+        int dGreen = abs(hue - config->colorsEcueil[0][0]);
         dGreen = min(dGreen, 180 - dGreen);
 
-        if (dRed < 42) {
-            colors.emplace_back("RED");
-        } else if (dGreen < 42) {
-            colors.emplace_back("GREEN");
+        if (dRed < config->colorThreshold) {
+            colors.emplace_back(COLOR_RED);
+        } else if (dGreen < config->colorThreshold) {
+            colors.emplace_back(COLOR_GREEN);
         } else {
-            colors.emplace_back("UNKNOWN");
+            colors.emplace_back(COLOR_UNKNOWN);
         }
     }
 

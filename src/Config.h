@@ -22,15 +22,16 @@ public:
     bool swapRgb;
     int markerId;
     int probeSize;
+    int colorThreshold;
 
     // from API
-    Point greenPoint;
-    Point redPoint;
+    vector<Point> ecueil;
+    vector<Point> bouees;
 
     // from etalonnage
     bool etalonnageDone = false;
-    Scalar green;
-    Scalar red;
+    vector<Scalar> colorsEcueil;
+    vector<Scalar> colorsBouees;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);

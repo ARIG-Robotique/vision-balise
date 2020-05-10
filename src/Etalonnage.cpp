@@ -6,20 +6,32 @@ Etalonnage::Etalonnage(Config *config) {
 }
 
 json Etalonnage::run(const Mat &source) {
-    spdlog::info("Etalonnage");
+    spdlog::info("ETALONNAGE");
 
-    Scalar red = arig_utils::getAverageColor(source, arig_utils::getProbe(config->redPoint, config->probeSize));
-    Scalar green = arig_utils::getAverageColor(source, arig_utils::getProbe(config->greenPoint, config->probeSize));
+    json r;
 
-    config->red = arig_utils::ScalarBGR2HSV(red);
-    config->green = arig_utils::ScalarBGR2HSV(green);
+    config->colorsEcueil = readColors(source, config->ecueil);
+    r["ecueil"] = arig_utils::scalars2json(config->colorsEcueil);
+
+    if (!config->bouees.empty()) {
+        config->colorsBouees = readColors(source, config->bouees);
+        r["bouees"] = arig_utils::scalars2json(config->colorsBouees);
+    } else {
+        config->colorsBouees.clear();
+    }
+
     config->etalonnageDone = true;
 
-    spdlog::debug("COLORS CALIBRATION\n red: {}\n green: {}", config->red, config->green);
+    return r;
+}
 
-    return json({
-            {"done",  true},
-            {"red",   arig_utils::scalar2json(config->red)},
-            {"green", arig_utils::scalar2json(config->green)}
-    });
+vector<Scalar> Etalonnage::readColors(const Mat &source, vector<Point> &points) {
+    vector<Scalar> colors;
+
+    for (auto &pt : points) {
+        Scalar color = arig_utils::getAverageColor(source, arig_utils::getProbe(pt, config->probeSize));
+        colors.emplace_back(arig_utils::ScalarBGR2HSV(color));
+    }
+
+    return colors;
 }

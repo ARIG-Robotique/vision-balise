@@ -64,14 +64,10 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
-        "etalonnage": {
-            "done": true,
-            "red": [60, 20, 50],   
-            "green": [60, 20, 50]  
-        },
         "detection": {
             "direction": "UP",
-            "colors": ["GREEN", "RED", "UNKNOWN", "GREEN","RED"]
+            "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN","RED"],
+            "bouees": [ ... ] // huit couleurs ou null
         }
     }
 }
@@ -80,9 +76,6 @@ $ sudo modprobe bcm2835-v4l2
 Les directions possibles sont `UP`, `DOWN` et `UNKNOWN`.  
 Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
 
-`colors` n'est dispo que si l'étalonnage à été fait.  
-Les couleurs d'étalonnage sont en HSV (H sur 0-179).
-
 ### Lancer l'étalonnage
 
 * Query
@@ -90,21 +83,35 @@ Les couleurs d'étalonnage sont en HSV (H sur 0-179).
 {
     "action": "ETALONNAGE",
     "datas": {
-        "redPoint": [500, 400],
-        "greenPoint": [500, 500]
+        "ecueil": [
+            [500, 500],
+            [500, 500]
+        ],
+        "bouees": [ ... ] // huit positions ou null
     }
 }
 ```
 
+`ecueil` est obligatoire et doit contenir deux points de gauche (vert) à droite (rouge).  
+`bouees` est optionnel et doit contenir huit points.  
 Les points sont attendus dans la résolution d'origine (2592 x 1944).
 
 * Réponse
 ```json
 {
- "status": "OK",
- "action": "ETALONNAGE"
+    "status": "OK",
+    "action": "ETALONNAGE",
+    "datas": {
+         "ecueil": [
+             [60, 20, 50],
+             [60, 20, 50]
+         ],   
+         "bouees": [ ... ]  // huit couleurs ou null
+    }
 }
 ```
+
+Les couleurs sont en HSV (H sur 0-179, S et V sur 0-255).
 
 ### Lancer la détection
 

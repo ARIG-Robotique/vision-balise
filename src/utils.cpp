@@ -47,18 +47,38 @@ namespace arig_utils {
         return mean(mat, mask);
     }
 
-    json points2json(vector<Point> points) {
+    json points2json(vector<Point> &points) {
         json arr;
 
         for (auto &pt : points) {
-            arr.emplace_back(json({ { "x", pt.x }, { "y", pt.y } }));
+            arr.emplace_back(json({ pt.x, pt.y }));
         }
 
         return arr;
     }
 
+    vector<Point> json2points(json &data) {
+        vector<Point> points;
+
+        for (auto &pt : data) {
+            points.emplace_back(Point(pt[0].get<int>(), pt[1].get<int>()));
+        }
+
+        return points;
+    }
+
     json scalar2json(Scalar scalar) {
         return json({ scalar[0], scalar[1], scalar[2] });
+    }
+
+    json scalars2json(vector<Scalar> &scalars) {
+        json arr;
+
+        for (auto &scalar : scalars) {
+            arr.emplace_back(scalar2json(scalar));
+        }
+
+        return arr;
     }
 
     string basename(string const & path) {

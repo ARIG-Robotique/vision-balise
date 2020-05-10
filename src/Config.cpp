@@ -23,6 +23,7 @@ bool Config::readConfigFile(const String &filename) {
     fs["swapRgb"] >> swapRgb;
     fs["markerId"] >> markerId;
     fs["probeSize"] >> probeSize;
+    fs["colorThreshold"] >> colorThreshold;
 
     return true;
 }
