@@ -120,7 +120,7 @@ vector<string> Detection::readColorsEcueil(const Mat &image) {
     vector<Point> points;
 
     for (unsigned short i = 0; i < 5; i++) {
-        Point pt = Point(config->ecueil[0].x + dX / 5.0 * i, config->ecueil[0].y + dY / 5.0 * i);
+        Point pt = Point(config->ecueil[0].x + dX / 4.0 * i, config->ecueil[0].y + dY / 4.0 * i);
         points.emplace_back(pt);
     }
 
