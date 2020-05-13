@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
         } else if (query.action == ACTION_ETALONNAGE) {
             if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2 ||
-                    (query.datas["bouees"] != nullptr && query.datas["bouees"].size() != 8)) {
+                    (query.datas["bouees"] != nullptr && query.datas["bouees"].size() != 6)) {
                 result.status = RESPONSE_ERROR;
                 result.errorMessage = "Invalid points";
             } else {

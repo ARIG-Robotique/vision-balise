@@ -68,7 +68,7 @@ $ sudo modprobe bcm2835-v4l2
         "detection": {
             "direction": "UP",
             "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN","RED"],
-            "bouees": [ ... ] // huit couleurs ou null
+            "bouees": [ ... ] // six couleurs ou null
         }
     }
 }
@@ -88,7 +88,7 @@ Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
             [500, 500],
             [500, 500]
         ],
-        "bouees": [ ... ] // huit positions ou null
+        "bouees": [ ... ] // six positions ou null
     }
 }
 ```
@@ -107,7 +107,7 @@ Les points sont attendus dans la résolution d'origine (2592 x 1944).
              [60, 20, 50],
              [60, 20, 50]
          ],   
-         "bouees": [ ... ]  // huit couleurs ou null
+         "bouees": [ ... ]  // six couleurs ou null
     }
 }
 ```
