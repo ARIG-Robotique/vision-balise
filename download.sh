@@ -20,8 +20,7 @@ SPDLOG_VERSION=1.3.1
 SPDLOG_FILENAME=spdlog-${SPDLOG_VERSION}
 SPDLOG_DOWNLOAD_URL=https://github.com/gabime/spdlog/archive/v${SPDLOG_VERSION}.zip
 
-RASPBERRY_TOOLS=https://github.com/raspberrypi/tools.git
-NEWER_RPI_TOOLS=https://github.com/rvagg/rpi-newer-crosstools.git
+RASPBERRY_TOOLS=https://github.com/rvagg/rpi-newer-crosstools.git
 
 echo "-- Download external dependencies"
 if [ ! -d "${DOWNLOAD_DIR}" ] ; then
@@ -32,13 +31,7 @@ fi
 cd ${DOWNLOAD_DIR}
 if [ ! -d "tools" ] ; then
     echo "---- Clone raspberry-tools ..."
-    git clone --depth=1 ${RASPBERRY_TOOLS}
-fi
-
-cd ${DOWNLOAD_DIR}
-if [ ! -d "newer-tools" ] ; then
-    echo "---- Clone newer raspberry-tools ..."
-    git clone --depth=1 ${NEWER_RPI_TOOLS} newer-tools
+    git clone --depth=1 ${RASPBERRY_TOOLS} tools
 fi
 
 cd ${DOWNLOAD_DIR}
@@ -75,15 +68,6 @@ if [ "${1}" = "build-pi" ] ; then
     fi
     cd opencv/build-pi
     cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DPI_TOOLS_HOME=${DOWNLOAD_DIR}/tools -DBUILD_SHARED_LIBS=Off -DCMAKE_TOOLCHAIN_FILE=${DOWNLOAD_DIR}/../raspberry.cmake ..
-
-elif [ "${1}" = "build-pi-new" ] ; then
-    echo "-- Config pour PI (new)"
-    cd ${DOWNLOAD_DIR}
-    if [ ! -d "opencv/build-pi-new" ] ; then
-        mkdir opencv/build-pi-new
-    fi
-    cd opencv/build-pi-new
-    cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DPI_TOOLS_HOME=${DOWNLOAD_DIR}/newer-tools -DBUILD_SHARED_LIBS=Off -DCMAKE_TOOLCHAIN_FILE=${DOWNLOAD_DIR}/../raspberry-new.cmake ..
 
 else
     echo "-- Config pour PC local"

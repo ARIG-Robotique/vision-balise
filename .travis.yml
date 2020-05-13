@@ -8,9 +8,6 @@ matrix:
     - SCRIPT=build-pi.sh
   - os: linux
     env:
-    - SCRIPT=build-pi-new.sh
-  - os: linux
-    env:
     - SCRIPT=build.sh
 script:
 - sh ${SCRIPT}

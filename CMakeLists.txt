@@ -25,13 +25,8 @@ if (DEFINED BUILD_PI)
     set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/tools)
     set(CMAKE_TOOLCHAIN_FILE ./raspberry.cmake)
 endif()
-if (DEFINED BUILD_PI_NEW)
-    set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/newer-tools)
-    set(CMAKE_TOOLCHAIN_FILE ./raspberry-new.cmake)
-endif()
 
 message(STATUS "Build PI     : ${BUILD_PI}")
-message(STATUS "Build PI New : ${BUILD_PI_NEW}")
 
 # Variable de build
 set(CMAKE_CXX_STANDARD 11)
@@ -70,8 +65,6 @@ execute_process(
 set(OpenCV_SHARED OFF)
 if (DEFINED BUILD_PI)
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi")
-elseif(DEFINED BUILD_PI_NEW)
-    set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi-new")
 else()
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build")
 endif()

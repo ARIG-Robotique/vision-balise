@@ -8,13 +8,12 @@ ssh $ROBOT_NAME mkdir -p $INSTALL_DIR
 ssh $ROBOT_NAME rm -vf $INSTALL_DIR/*
 
 echo "Compilation ..."
-./build-pi-new.sh
+./build-pi.sh
 
 echo "Déploiement Applicatif ..."
-scp ./build-pi-new/bin/vision_balise $ROBOT_NAME:$INSTALL_DIR/
+scp ./build-pi/bin/vision_balise $ROBOT_NAME:$INSTALL_DIR/
 scp ./config.yml $ROBOT_NAME:$INSTALL_DIR/
 scp ./calibration.yml $ROBOT_NAME:$INSTALL_DIR/
-scp ./etallonage.yml $ROBOT_NAME:$INSTALL_DIR/
 scp -r ./scripts/* $ROBOT_NAME:$INSTALL_DIR/
 ssh $ROBOT_NAME mkdir -p $INSTALL_DIR/output
 
