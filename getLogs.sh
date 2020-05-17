@@ -9,4 +9,5 @@ echo "Récupération des infos ..."
 scp ${ROBOT_NAME}:${INSTALL_DIR}/output/* ./output-${ROBOT_NAME}/
 
 echo "Nétoyage ..."
-ssh ${ROBOT_NAME} sudo rm -Rvf ${INSTALL_DIR}/${ROBOT_NAME}/output/*
+ssh ${ROBOT_NAME} rm -vf ${INSTALL_DIR}/output/*
+
