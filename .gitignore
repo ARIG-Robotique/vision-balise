@@ -58,3 +58,4 @@ fabric.properties
 build*/
 download/
 output/
+output-sauron/
