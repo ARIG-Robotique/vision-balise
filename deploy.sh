@@ -19,7 +19,9 @@ ssh $ROBOT_NAME mkdir -p $INSTALL_DIR/output
 
 echo "Déploiement service ..."
 ssh $ROBOT_NAME sudo mv $INSTALL_DIR/$ROBOT_NAME.service /lib/systemd/system/
+ssh $ROBOT_NAME sudo mv $INSTALL_DIR/$ROBOT_NAME-photo.service /lib/systemd/system/
 ssh $ROBOT_NAME sudo mv $INSTALL_DIR/$ROBOT_NAME-shutdown.service /lib/systemd/system/
 ssh $ROBOT_NAME sudo systemctl daemon-reload
 ssh $ROBOT_NAME sudo systemctl enable $ROBOT_NAME.service
+ssh $ROBOT_NAME sudo systemctl enable $ROBOT_NAME-photo.service
 ssh $ROBOT_NAME sudo systemctl enable $ROBOT_NAME-shutdown.service

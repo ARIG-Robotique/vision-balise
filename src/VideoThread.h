@@ -50,7 +50,10 @@ public:
         Mat source;
 
         pthread_mutex_lock(&m_datasMutex);
-        m_video->read(source);
+        try {
+            m_video->retrieve(source);
+        } catch(const Exception &e) {}
+
         pthread_mutex_unlock(&m_datasMutex);
 
         return source;

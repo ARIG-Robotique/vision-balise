@@ -7,10 +7,15 @@
 ProcessThread::ProcessThread(Config *config) {
     m_config = config;
     m_action = ACTION_IDLE;
-    m_videoThread = new VideoThread(config);
 
-    if (m_videoThread->waitReady()) {
+    if (!m_config->mockPhoto.empty()) {
         m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
+    } else {
+        m_videoThread = new VideoThread(config);
+
+        if (m_videoThread->waitReady()) {
+            m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
+        }
     }
 }
 
@@ -170,7 +175,9 @@ void *ProcessThread::process() {
         pthread_mutex_unlock(&m_actionMutex);
 
         if (action == ACTION_EXIT) {
-            m_videoThread->exit();
+            if (m_videoThread != nullptr) {
+                m_videoThread->exit();
+            }
             spdlog::info("ProcessThread: Demande d'arret du thread");
             stop = true;
 
