@@ -3,7 +3,6 @@
 #include "Calibration.h"
 #include "SocketHelper.h"
 #include "ProcessThread.h"
-#include "tester.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "utils.h"
 
@@ -86,12 +85,6 @@ int main(int argc, char **argv) {
         config.mockPhoto = parser.get<string>("mock-photo");
     }
 
-    // mode de test
-    if (config.testMode) {
-        runTest(&config);
-        return 0;
-    }
-
     // ouverture de la socket
     SocketHelper socket(parser.get<string>("socket-type"));
     if (socket.isUnknown()) {
@@ -112,6 +105,14 @@ int main(int argc, char **argv) {
     if (!processThread.isReady()) {
         spdlog::error("Cannot create OpenCV thread");
         return 2;
+    }
+
+    // mode de test
+    if (config.testMode) {
+        while (true) {
+            this_thread::sleep_for(chrono::seconds (2));
+            processThread.displayPhoto();
+        }
     }
 
     // boucle de commande

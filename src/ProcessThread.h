@@ -3,24 +3,22 @@
 
 #include "common.h"
 #include "Config.h"
+#include "VideoThread.h"
 
 class ProcessThread {
 
 private:
     Config* m_config;
-    VideoCapture* m_video;
+    VideoThread* m_videoThread;
 
     pthread_t m_thread;
+    pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t m_actionMutex = PTHREAD_MUTEX_INITIALIZER;
 
     bool m_ready = false;
-    bool m_cameraReady = false;
     json m_detectionResult;
     Mat m_imgOrig;
-
-    pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
-
     string m_action;
-    pthread_mutex_t m_actionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 public:
     explicit ProcessThread(Config* config);
@@ -33,6 +31,8 @@ public:
     JsonResult startEtalonnage();
 
     JsonResult exit();
+
+    void displayPhoto();
 
 private:
     void * process();

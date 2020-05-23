@@ -7,7 +7,11 @@
 ProcessThread::ProcessThread(Config *config) {
     m_config = config;
     m_action = ACTION_IDLE;
-    m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
+    m_videoThread = new VideoThread(config);
+
+    if (m_videoThread->waitReady()) {
+        m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
+    }
 }
 
 //////////////////////
@@ -30,7 +34,7 @@ JsonResult ProcessThread::getStatus() {
     json datas;
 
     pthread_mutex_lock(&m_datasMutex);
-    datas["cameraReady"] = m_cameraReady;
+    datas["cameraReady"] = true;
     datas["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_datasMutex);
 
@@ -67,6 +71,20 @@ JsonResult ProcessThread::getPhoto(int width) {
     }
 
     return r;
+}
+
+/**
+ * Affiche al dernière image dans uen fenêtre
+ */
+void ProcessThread::displayPhoto() {
+    pthread_mutex_lock(&m_datasMutex);
+    if (!m_imgOrig.empty()) {
+        imshow("Photo", m_imgOrig);
+        waitKey(1);
+    } else {
+        spdlog::warn("Photo is empty");
+    }
+    pthread_mutex_unlock(&m_datasMutex);
 }
 
 /**
@@ -143,20 +161,6 @@ void *ProcessThread::create(void *context) {
 void *ProcessThread::process() {
     spdlog::info("ProcessThread: ready");
 
-    m_video = new VideoCapture(m_config->cameraIndex);
-
-    pthread_mutex_lock(&m_datasMutex);
-    m_cameraReady = m_video->isOpened();
-    pthread_mutex_unlock(&m_datasMutex);
-
-    if (!m_cameraReady) {
-        spdlog::error("Cannot open camera");
-        pthread_exit(nullptr);
-    }
-
-    m_video->set(CV_CAP_PROP_FRAME_WIDTH, m_config->cameraResolution.width);
-    m_video->set(CV_CAP_PROP_FRAME_HEIGHT, m_config->cameraResolution.height);
-
     bool stop = false;
     string action;
 
@@ -166,7 +170,7 @@ void *ProcessThread::process() {
         pthread_mutex_unlock(&m_actionMutex);
 
         if (action == ACTION_EXIT) {
-            m_video->release();
+            m_videoThread->exit();
             spdlog::info("ProcessThread: Demande d'arret du thread");
             stop = true;
 
@@ -200,8 +204,7 @@ bool ProcessThread::takePhoto(const string &name) {
         }
     }
 
-    Mat source;
-    m_video->read(source);
+    Mat source = m_videoThread->getPhoto();
 
     if (!source.data) {
         spdlog::error("Could not open or find the camera");

@@ -181,7 +181,7 @@ JsonQuery SocketHelper::getQuery(void) {
     if (buffer[0] != 0 && buffer[0] != 10 && buffer[0] != 13) {
         try {
             json jsonValue = json::parse(buffer);
-            spdlog::debug("Requête client : {}", jsonValue.dump(2));
+            spdlog::trace("Requête client : {}", jsonValue.dump(2));
             q.action = jsonValue["action"];
             q.datas = jsonValue["datas"];
         } catch (const exception & e) {
@@ -203,7 +203,7 @@ void SocketHelper::sendResponse(JsonResult response) {
     r["errorMessage"] = response.errorMessage;
     r["datas"] = response.datas;
 
-    spdlog::debug("Réponse client : {}", r.dump(2));
+    spdlog::trace("Réponse client : {}", r.dump(2));
 
     ostringstream outStr;
     outStr << r.dump() << endl;
