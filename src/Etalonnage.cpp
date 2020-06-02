@@ -22,6 +22,8 @@ json Etalonnage::run(const Mat &source) {
 
     config->etalonnageDone = true;
 
+    spdlog::debug(r.dump(2));
+
     return r;
 }
 

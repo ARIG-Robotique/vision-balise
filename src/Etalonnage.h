@@ -12,6 +12,8 @@ private:
 public:
     explicit Etalonnage(Config* config);
     json run(const Mat &source);
+
+private:
     vector<Scalar> readColors(const Mat &source, vector<Point> &points);
 };
 

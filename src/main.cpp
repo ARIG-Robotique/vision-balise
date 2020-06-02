@@ -152,8 +152,7 @@ int main(int argc, char **argv) {
             result = processThread.getPhoto(width);
 
         } else if (query.action == ACTION_ETALONNAGE) {
-            if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2 ||
-                    (query.datas["bouees"] != nullptr && query.datas["bouees"].size() != 6)) {
+            if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2) {
                 result.status = RESPONSE_ERROR;
                 result.errorMessage = "Invalid points";
             } else {

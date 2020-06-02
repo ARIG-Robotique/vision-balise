@@ -15,13 +15,10 @@ public:
 
 private:
     void findMarkers(const Mat &image, vector<vector<Point2f>> &markerCorners, vector<int> &markerIds);
-
     vector<Point2f> getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id);
-
     bool isMarkerUpside(vector<Point2f> &marker);
-
     vector<string> readColorsEcueil(const Mat &image);
-    vector<string> readColors(const Mat &image, const vector<Point> &points);
+    vector<string> checkPresenceBouees(const Mat &image);
 };
 
 

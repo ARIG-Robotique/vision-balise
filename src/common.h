@@ -35,6 +35,9 @@ using json = nlohmann::json;
 #define DIR_DOWN "DOWN"
 #define DIR_UNKNOWN "UNKNOWN"
 
+#define BOUE_PRESENT "PRESENT"
+#define BOUE_ABSENT "ABSENT"
+
 struct JsonResult {
     string status;
     string action;

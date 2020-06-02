@@ -16,4 +16,4 @@ markerId: 17
 probeSize: 20
 
 # Seuil de détection de couleurs
-colorThreshold: 42
+colorThreshold: 21

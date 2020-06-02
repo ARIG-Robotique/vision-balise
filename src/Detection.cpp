@@ -36,7 +36,7 @@ json Detection::run(const Mat &source, int index) {
         r["ecueil"] = readColorsEcueil(source);
 
         if (!config->bouees.empty()) {
-            r["bouees"] = readColors(source, config->bouees);
+            r["bouees"] = checkPresenceBouees(source);
         }
     }
 
@@ -114,32 +114,19 @@ bool Detection::isMarkerUpside(vector<Point2f> &marker) {
  * Lecture des cinq couleurs de l'ecueil
  */
 vector<string> Detection::readColorsEcueil(const Mat &image) {
-    int dX = config->ecueil[1].x - config->ecueil[0].x;
-    int dY = config->ecueil[1].y - config->ecueil[0].y;
-
-    vector<Point> points;
-
-    for (unsigned short i = 0; i < 5; i++) {
-        Point pt = Point(config->ecueil[0].x + dX / 4.0 * i, config->ecueil[0].y + dY / 4.0 * i);
-        points.emplace_back(pt);
-    }
-
-    return readColors(image, points);
-}
-
-/**
- * Lecture des couleurs d'un ensemble de points
- */
-vector<string> Detection::readColors(const Mat &image, const vector<Point> &points) {
     vector<string> colors;
 
-    for (auto &pt : points) {
-        Scalar color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
-        int hue = arig_utils::ScalarBGR2HSV(color)[0];
+    auto dX = config->ecueil[1].x - config->ecueil[0].x;
+    auto dY = config->ecueil[1].y - config->ecueil[0].y;
 
-        int dRed = abs(hue - config->colorsEcueil[1][0]);
+    for (auto i = 0; i < 5; i++) {
+        auto pt = Point(config->ecueil[0].x + dX / 4.0 * i, config->ecueil[0].y + dY / 4.0 * i);
+        auto color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
+        auto hue = arig_utils::ScalarBGR2HSV(color)[0];
+
+        auto dRed = abs(hue - config->colorsEcueil[1][0]);
         dRed = min(dRed, 180 - dRed);
-        int dGreen = abs(hue - config->colorsEcueil[0][0]);
+        auto dGreen = abs(hue - config->colorsEcueil[0][0]);
         dGreen = min(dGreen, 180 - dGreen);
 
         if (dRed < config->colorThreshold) {
@@ -152,4 +139,27 @@ vector<string> Detection::readColors(const Mat &image, const vector<Point> &poin
     }
 
     return colors;
+}
+
+/**
+ * Vérification de présence de chque bouée
+ */
+vector<string> Detection::checkPresenceBouees(const Mat &image) {
+    vector<string> result;
+
+    for (auto i = 0; i < config->bouees.size(); i++) {
+        auto pt = config->bouees[i];
+        auto color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
+
+        auto d = abs(arig_utils::ScalarBGR2HSV(color)[0] - config->colorsBouees[i][0]);
+        d = min(d, 180 - d);
+
+        if (d < config->colorThreshold) {
+            result.emplace_back(BOUE_PRESENT);
+        } else {
+            result.emplace_back(BOUE_ABSENT);
+        }
+    }
+
+    return result;
 }

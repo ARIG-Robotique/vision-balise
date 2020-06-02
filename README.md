@@ -67,8 +67,8 @@ $ sudo modprobe bcm2835-v4l2
         "cameraReady": true,
         "detection": {
             "direction": "UP",
-            "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN","RED"],
-            "bouees": [ ... ] // six couleurs ou null
+            "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
+            "bouees": ["PRESENT", "ABSENT"]
         }
     }
 }
@@ -88,13 +88,16 @@ Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
             [500, 500],
             [500, 500]
         ],
-        "bouees": [ ... ] // six positions ou null
+        "bouees": [
+            [500, 500],
+            [500, 500]
+        ]
     }
 }
 ```
 
 `ecueil` est obligatoire et doit contenir deux points de gauche (vert) à droite (rouge).  
-`bouees` est optionnel et doit contenir huit points.  
+`bouees` est optionnel.  
 Les points sont attendus dans la résolution d'origine (2592 x 1944).
 
 * Réponse
@@ -106,8 +109,11 @@ Les points sont attendus dans la résolution d'origine (2592 x 1944).
          "ecueil": [
              [60, 20, 50],
              [60, 20, 50]
-         ],   
-         "bouees": [ ... ]  // six couleurs ou null
+         ],
+         "bouees": [
+             [60, 20, 50],
+             [60, 20, 50]
+         ]
     }
 }
 ```
