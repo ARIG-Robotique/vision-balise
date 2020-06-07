@@ -145,11 +145,7 @@ int main(int argc, char **argv) {
             result = processThread.getStatus();
 
         } else if (query.action == ACTION_PHOTO) {
-            int width = 1296;
-            if (query.datas["width"] != nullptr) {
-                width = query.datas["width"].get<int>();
-            }
-            result = processThread.getPhoto(width);
+            result = processThread.getPhoto();
 
         } else if (query.action == ACTION_ETALONNAGE) {
             if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2) {

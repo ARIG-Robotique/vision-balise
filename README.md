@@ -32,15 +32,8 @@ $ sudo modprobe bcm2835-v4l2
 
 * Query
 ```json
-{
-  "action":"PHOTO",
-  "datas": {
-    "width": 1296
-  }
-}
+{"action":"PHOTO"}
 ```
-
-`width` vaut par défaut `1296`.
 
 * Réponse
 ```json

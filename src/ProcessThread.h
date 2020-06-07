@@ -25,7 +25,7 @@ public:
 
     bool isReady();
     JsonResult getStatus();
-    JsonResult getPhoto(int width);
+    JsonResult getPhoto();
 
     JsonResult startDetection();
     JsonResult startEtalonnage();

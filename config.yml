@@ -3,8 +3,8 @@
 # index de la camera
 cameraIndex: 0
 
-# résolution des photos brutes (NE PAS CHANGER, ou le driver video crash)
-cameraResolution: [ 2592, 1944 ]
+# résolution des photos brutes
+cameraResolution: [ 1280, 960 ]
 
 # procède à une conversion RGB -> BGR après lecture depuis la caméra
 swapRgb: 1

@@ -53,26 +53,23 @@ JsonResult ProcessThread::getStatus() {
  * Retourne la dernière photo en base64
  * @return
  */
-JsonResult ProcessThread::getPhoto(int width) {
-    spdlog::info("Get photo of size {}", width);
+JsonResult ProcessThread::getPhoto() {
     json datas;
 
-    Mat img;
     pthread_mutex_lock(&m_datasMutex);
     if (!m_imgOrig.empty()) {
-        Size size(width, m_imgOrig.size().height * width / m_imgOrig.size().width);
-        resize(m_imgOrig, img, size);
+        datas = arig_utils::matToBase64(m_imgOrig);
     }
     pthread_mutex_unlock(&m_datasMutex);
 
     JsonResult r;
 
-    if (img.empty()) {
+    if (datas.empty()) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Pas d'image";
     } else {
         r.status = RESPONSE_OK;
-        r.datas = arig_utils::matToBase64(img);
+        r.datas = datas;
     }
 
     return r;
