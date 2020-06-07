@@ -6,6 +6,7 @@ Etalonnage::Etalonnage(Config *config) {
 }
 
 json Etalonnage::run(const Mat &source) {
+    auto start = arig_utils::startTiming();
     spdlog::info("ETALONNAGE");
 
     json r;
@@ -23,6 +24,7 @@ json Etalonnage::run(const Mat &source) {
     config->etalonnageDone = true;
 
     spdlog::debug(r.dump(2));
+    spdlog::debug("Done in {}ms", arig_utils::ellapsedTime(start));
 
     return r;
 }

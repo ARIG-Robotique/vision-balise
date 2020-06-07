@@ -21,6 +21,7 @@ public:
     int cameraIndex;
     Size cameraResolution;
     bool swapRgb;
+    bool undistort;
     int markerId;
     int probeSize;
     int colorThreshold;

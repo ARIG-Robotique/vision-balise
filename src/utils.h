@@ -25,6 +25,10 @@ namespace arig_utils {
     string basename(string const & path);
 
     string matToBase64(const Mat &mat);
+
+    chrono::high_resolution_clock::time_point startTiming();
+
+    long ellapsedTime(chrono::high_resolution_clock::time_point start);
 }
 
 #endif //VISION_BALISE_UTILS_H

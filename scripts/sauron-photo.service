@@ -1,9 +1,0 @@
-[Unit]
-After=multi-user.target
-
-[Service]
-ExecStart=/home/pi/sauron/takePhoto.sh
-WorkingDirectory=/home/pi/sauron
-
-[Install]
-WantedBy=default.target

@@ -6,6 +6,7 @@ Detection::Detection(Config *config) {
 }
 
 json Detection::run(const Mat &source, int index) {
+    auto start = arig_utils::startTiming();
     spdlog::info("DETECTION {}", index);
 
     json r;
@@ -41,6 +42,7 @@ json Detection::run(const Mat &source, int index) {
     }
 
     spdlog::debug(r.dump(2));
+    spdlog::debug("Done in {}ms", arig_utils::ellapsedTime(start));
 
     return r;
 }

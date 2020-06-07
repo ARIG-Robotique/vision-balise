@@ -93,4 +93,15 @@ namespace arig_utils {
         string encoded = base64_encode(enc_msg, buf.size());
         return encoded;
     }
+
+
+
+    chrono::high_resolution_clock::time_point startTiming() {
+        return chrono::high_resolution_clock::now();
+    }
+
+    long ellapsedTime(chrono::high_resolution_clock::time_point start) {
+        auto elapsed = chrono::high_resolution_clock::now() - start;
+        return chrono::duration_cast<chrono::milliseconds>(elapsed).count();
+    }
 }

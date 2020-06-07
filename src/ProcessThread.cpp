@@ -215,7 +215,11 @@ bool ProcessThread::takePhoto(const string &name) {
         return false;
     } else {
         Mat undistorted;
-        undistort(source, undistorted, m_config->cameraMatrix, m_config->distCoeffs);
+        if (m_config->undistort) {
+            undistort(source, undistorted, m_config->cameraMatrix, m_config->distCoeffs);
+        } else {
+            undistorted = source.clone();
+        }
 
         Mat final;
         if (m_config->swapRgb) {
@@ -236,7 +240,6 @@ bool ProcessThread::takePhoto(const string &name) {
  * Boucle de photo
  */
 void ProcessThread::processIdle() {
-    const int wait = 2;
     int i = 1;
     string action;
 
@@ -249,13 +252,14 @@ void ProcessThread::processIdle() {
             break;
         }
 
+        auto start = arig_utils::startTiming();
         if (takePhoto("idle-" + to_string(i))) {
-            spdlog::info("Photo !");
+            spdlog::info("Photo took in {}ms", arig_utils::ellapsedTime(start));
         }
 
         i++;
 
-        this_thread::sleep_for(chrono::seconds(wait));
+        this_thread::sleep_for(chrono::seconds(1));
     }
 }
 
@@ -265,7 +269,6 @@ void ProcessThread::processIdle() {
 void ProcessThread::processDetection() {
     Detection detection(m_config);
 
-    const int wait = 2;
     int i = 0;
     string action;
 
@@ -288,6 +291,6 @@ void ProcessThread::processDetection() {
 
         i++;
 
-        this_thread::sleep_for(chrono::seconds(wait));
+        this_thread::sleep_for(chrono::seconds(1));
     }
 }
