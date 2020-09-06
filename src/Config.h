@@ -25,6 +25,8 @@ public:
     int markerId;
     int probeSize;
     int colorThreshold;
+    int detectionBuffer;
+    int detectionValidLimit;
 
     // from API
     vector<Point> ecueil;

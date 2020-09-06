@@ -25,6 +25,8 @@ bool Config::readConfigFile(const String &filename) {
     fs["markerId"] >> markerId;
     fs["probeSize"] >> probeSize;
     fs["colorThreshold"] >> colorThreshold;
+    fs["detectionBuffer"] >> detectionBuffer;
+    fs["detectionValidLimit"] >> detectionValidLimit;
 
     return true;
 }

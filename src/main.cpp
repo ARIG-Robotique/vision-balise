@@ -38,6 +38,8 @@ int main(int argc, char **argv) {
     const String outputDir = parser.get<string>("output-dir");
     const String outputPrefix = outputDir + String(timeBuffer) + "-";
 
+    mkdir(outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
     // configuration du logger
     auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log");
     spdlog::default_logger()->sinks().push_back(file_sink);

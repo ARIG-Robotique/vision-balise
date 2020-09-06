@@ -3,6 +3,13 @@
 
 Detection::Detection(Config *config) {
     this->config = config;
+
+    for (auto i = 0; i < 5; i++) {
+        ecueilBuffer.emplace_back(vector<int>(config->detectionBuffer, 0));
+    }
+    for (auto i = 0; i < config->bouees.size(); i++) {
+        boueesBuffer.emplace_back(vector<int>(config->detectionBuffer, 0));
+    }
 }
 
 json Detection::run(const Mat &source, int index) {
@@ -38,6 +45,11 @@ json Detection::run(const Mat &source, int index) {
 
         if (!config->bouees.empty()) {
             r["bouees"] = checkPresenceBouees(source);
+        }
+
+        bufferIndex++;
+        if (bufferIndex == config->detectionBuffer) {
+            bufferIndex = 0;
         }
     }
 
@@ -132,8 +144,21 @@ vector<string> Detection::readColorsEcueil(const Mat &image) {
         dGreen = min(dGreen, 180 - dGreen);
 
         if (dRed < config->colorThreshold) {
-            colors.emplace_back(COLOR_RED);
+            ecueilBuffer[i][bufferIndex] = 1;
         } else if (dGreen < config->colorThreshold) {
+            ecueilBuffer[i][bufferIndex] = -1;
+        } else {
+            ecueilBuffer[i][bufferIndex] = 0;
+        }
+
+        auto val = 0.0;
+        for (auto j = 0; j < config->detectionBuffer; j++) {
+            val += ecueilBuffer[i][j];
+        }
+
+        if (val >= config->detectionValidLimit) {
+            colors.emplace_back(COLOR_RED);
+        } else if (val <= -config->detectionValidLimit) {
             colors.emplace_back(COLOR_GREEN);
         } else {
             colors.emplace_back(COLOR_UNKNOWN);
@@ -144,7 +169,7 @@ vector<string> Detection::readColorsEcueil(const Mat &image) {
 }
 
 /**
- * Vérification de présence de chque bouée
+ * Vérification de présence de chaque bouée
  */
 vector<string> Detection::checkPresenceBouees(const Mat &image) {
     vector<string> result;
@@ -157,6 +182,17 @@ vector<string> Detection::checkPresenceBouees(const Mat &image) {
         d = min(d, 180 - d);
 
         if (d < config->colorThreshold) {
+            boueesBuffer[i][bufferIndex] = 1;
+        } else {
+            boueesBuffer[i][bufferIndex] = 0;
+        }
+
+        auto val = 0.0;
+        for (auto j = 0; j < config->detectionBuffer; j++) {
+            val += boueesBuffer[i][j];
+        }
+
+        if (val >= config->detectionValidLimit) {
             result.emplace_back(BOUE_PRESENT);
         } else {
             result.emplace_back(BOUE_ABSENT);

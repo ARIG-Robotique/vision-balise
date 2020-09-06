@@ -20,3 +20,9 @@ probeSize: 20
 
 # Seuil de détection de couleurs
 colorThreshold: 21
+
+# Nombre de valeurs de détection pour moyenner
+detectionBuffer: 4
+
+# Nombre de valeurs identiques minimum pour valider la détection
+detectionValidLimit: 3

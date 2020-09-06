@@ -40,6 +40,7 @@ JsonResult ProcessThread::getStatus() {
 
     pthread_mutex_lock(&m_datasMutex);
     datas["cameraReady"] = true;
+    datas["etalonnageDone"] = m_config->etalonnageDone;
     datas["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_datasMutex);
 
@@ -297,6 +298,6 @@ void ProcessThread::processDetection() {
 
         i++;
 
-        this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(chrono::milliseconds(500));
     }
 }

@@ -9,6 +9,10 @@ class Detection {
 private:
     Config* config;
 
+    short bufferIndex = 0;
+    vector<vector<int>> ecueilBuffer;
+    vector<vector<int>> boueesBuffer;
+
 public:
     explicit Detection(Config* config);
     json run(const Mat &source, int index);

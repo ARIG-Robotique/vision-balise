@@ -58,6 +58,7 @@ $ sudo modprobe bcm2835-v4l2
     "action": "STATUS",
     "datas": {
         "cameraReady": true,
+        "etalonnageDone": true,
         "detection": {
             "direction": "UP",
             "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
