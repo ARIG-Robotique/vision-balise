@@ -75,6 +75,10 @@ JsonResult ProcessThread::getPhoto() {
     return r;
 }
 
+JsonResult ProcessThread::setIdle() {
+    return action(ACTION_IDLE);
+}
+
 /**
  * Affiche al dernière image dans uen fenêtre
  */
@@ -102,6 +106,8 @@ JsonResult ProcessThread::startDetection() {
  * @return
  */
 JsonResult ProcessThread::startEtalonnage() {
+    action(ACTION_IDLE);
+
     Etalonnage etalonnage(m_config);
 
     JsonResult r;

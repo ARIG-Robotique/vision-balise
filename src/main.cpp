@@ -147,6 +147,9 @@ int main(int argc, char **argv) {
         } else if (query.action == ACTION_PHOTO) {
             result = processThread.getPhoto();
 
+        } else if (query.action == ACTION_IDLE) {
+            result = processThread.setIdle();
+
         } else if (query.action == ACTION_ETALONNAGE) {
             if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2) {
                 result.status = RESPONSE_ERROR;

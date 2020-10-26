@@ -128,6 +128,21 @@ Les couleurs sont en HSV (H sur 0-179, S et V sur 0-255).
 }
 ```
 
+### Revient dans un état d'attente
+
+* Query
+```json
+{"action": "IDLE"}
+```
+
+* Réponse
+```json
+{
+  "status": "OK",
+  "action": "IDLE"
+}
+```
+
 ### Quitter le programme
 
 * Query
