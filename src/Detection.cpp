@@ -41,10 +41,12 @@ json Detection::run(const Mat &source, int index) {
 
     // lecture des couleurs
     if (config->etalonnageDone) {
-        r["ecueil"] = readColorsEcueil(source);
+        auto ecueil = readColorsEcueil(source);
+        r["ecueil"] = arig_utils::strings2json(ecueil);
 
         if (!config->bouees.empty()) {
-            r["bouees"] = checkPresenceBouees(source);
+            auto bouees = checkPresenceBouees(source);
+            r["bouees"] = arig_utils::strings2json(bouees);
         }
 
         bufferIndex++;

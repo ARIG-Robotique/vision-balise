@@ -57,6 +57,16 @@ namespace arig_utils {
         return arr;
     }
 
+    json strings2json(vector<string> &values) {
+        json arr;
+
+        for (auto &str : values) {
+            arr.emplace_back(str);
+        }
+
+        return arr;
+    }
+
     vector<Point> json2points(json &data) {
         vector<Point> points;
 

@@ -16,6 +16,8 @@ namespace arig_utils {
 
     json points2json(vector<Point> &points);
 
+    json strings2json(vector<string> &values);
+
     vector<Point> json2points(json &data);
 
     json scalar2json(Scalar scalar);
