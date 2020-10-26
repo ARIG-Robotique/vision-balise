@@ -27,6 +27,8 @@ bool Config::readConfigFile(const String &filename) {
     fs["colorThreshold"] >> colorThreshold;
     fs["detectionBuffer"] >> detectionBuffer;
     fs["detectionValidLimit"] >> detectionValidLimit;
+    fs["idleDelay"] >> idleDelay;
+    fs["detectionDelay"] >> detectionDelay;
 
     return true;
 }

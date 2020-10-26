@@ -27,6 +27,8 @@ public:
     int colorThreshold;
     int detectionBuffer;
     int detectionValidLimit;
+    int idleDelay;
+    int detectionDelay;
 
     // from API
     vector<Point> ecueil;

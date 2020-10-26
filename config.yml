@@ -26,3 +26,9 @@ detectionBuffer: 4
 
 # Nombre de valeurs identiques minimum pour valider la détection
 detectionValidLimit: 3
+
+# Délai entre chaque prise de photo
+idleDelay: 1000
+
+# Délai entre chaque détection
+detectionDelay: 500
