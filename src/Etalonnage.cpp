@@ -9,6 +9,10 @@ json Etalonnage::run(const Mat &source) {
     auto start = arig_utils::startTiming();
     spdlog::info("ETALONNAGE");
 
+    if (config->debug) {
+        imwrite(config->outputPrefix + "etallonage.jpg", source);
+    }
+
     json r;
 
     config->colorsEcueil = readColors(source, config->ecueil);

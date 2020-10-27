@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     mkdir(outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     // configuration du logger
-    auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log");
+    auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log.txt");
     spdlog::default_logger()->sinks().push_back(file_sink);
     spdlog::flush_every(std::chrono::seconds(1));
     spdlog::set_level(parser.has("debug") ? spdlog::level::debug : spdlog::level::info);
