@@ -23,9 +23,10 @@ json Detection::run(const Mat &source, int index) {
     vector<vector<Point2f>> markerCorners;
     findMarkers(source, markerCorners, markerIds);
 
-    if (config->debug) {
+    if (config->debug || index % 10 == 0) {
         Mat output = source.clone();
         aruco::drawDetectedMarkers(output, markerCorners, markerIds);
+        // TODO draw probes
         imwrite(config->outputPrefix + "detection-markers-" + to_string(index) + ".jpg", output);
     }
 

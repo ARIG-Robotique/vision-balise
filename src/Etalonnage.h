@@ -15,6 +15,7 @@ public:
 
 private:
     vector<Scalar> readColors(const Mat &source, vector<Point> &points);
+    void drawProbes(const Mat &output, vector<Point> &points, vector<Scalar>& colors);
 };
 
 

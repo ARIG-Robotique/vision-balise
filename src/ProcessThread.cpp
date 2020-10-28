@@ -263,6 +263,10 @@ void ProcessThread::processIdle() {
         auto start = arig_utils::startTiming();
         if (takePhoto("idle-" + to_string(i))) {
             spdlog::info("Photo took in {}ms", arig_utils::ellapsedTime(start));
+
+            if (i % 10 == 0) {
+                imwrite(m_config->outputPrefix + "idle-" + to_string(i) + ".jpg", m_imgOrig);
+            }
         }
 
         i++;

@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log.txt");
     spdlog::default_logger()->sinks().push_back(file_sink);
     spdlog::flush_every(std::chrono::seconds(1));
-    spdlog::set_level(parser.has("debug") ? spdlog::level::debug : spdlog::level::info);
+    spdlog::set_level(spdlog::level::debug);
 
     // démarrage
     spdlog::info("Start vision balise");
