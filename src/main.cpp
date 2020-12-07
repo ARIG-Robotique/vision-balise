@@ -3,6 +3,7 @@
 #include "Calibration.h"
 #include "SocketHelper.h"
 #include "ProcessThread.h"
+#include "Screen.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "utils.h"
 
@@ -86,6 +87,9 @@ int main(int argc, char **argv) {
     if (parser.has("mock-photo")) {
         config.mockPhoto = parser.get<string>("mock-photo");
     }
+
+    Screen screen(&config);
+    return 0;
 
     // ouverture de la socket
     SocketHelper socket(parser.get<string>("socket-type"));
