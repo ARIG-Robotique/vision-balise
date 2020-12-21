@@ -16,10 +16,13 @@ public:
     // from calibration
     Mat cameraMatrix;
     Mat distCoeffs;
+    Mat cameraK;
+    Mat cameraD;
 
     // from config
     int cameraIndex;
     Size cameraResolution;
+    bool fisheye;
     bool swapRgb;
     bool undistort;
     int markerId;

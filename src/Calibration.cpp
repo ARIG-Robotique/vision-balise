@@ -9,38 +9,12 @@ int numSquares = numCornersHor * numCornersVer;
 Size board_sz = Size(numCornersHor, numCornersVer);
 
 /**
- * Lance la calibration et sauvegarde dans un fichier
- * @param directory
- * @param filename
- * @param config
+ * Calcule les matrices de la caméra à partir de plusieurs photos d'echequier
  */
 bool Calibration::runAndSave(const String &directory, const String &filename, const Config* config) {
     vector<String> files;
     glob(directory, files);
 
-    Mat cameraMatrix = Mat(3, 3, CV_32FC1);
-    Mat distCoeffs;
-
-    if (!run(cameraMatrix, distCoeffs, files, config)) {
-        return false;
-    }
-
-    FileStorage fs(filename, FileStorage::WRITE);
-    fs << "cameraMatrix" << cameraMatrix;
-    fs << "distCoeffs" << distCoeffs;
-    fs.release();
-
-    return true;
-}
-
-/**
- * Calcule les matrices de la caméra à partir de plusieurs photos d'echequier
- * @param cameraMatrix
- * @param distCoeffs
- * @param files
- * @param testMode
- */
-bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &files, const Config* config) {
     Size image_sz;
 
     vector<Point3f> obj;
@@ -51,7 +25,6 @@ bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &
     vector<vector<Point3f>> object_points;
     vector<vector<Point2f>> image_points;
     vector<Point2f> corners;
-    int successes = 0;
 
     for (auto const &file : files) {
         Mat image = imread(file, IMREAD_COLOR);
@@ -62,8 +35,10 @@ bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &
         bool found = findChessboardCorners(image, board_sz, corners,
                                            CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
 
-        drawChessboardCorners(image, board_sz, corners, found);
-        imwrite(config->outputPrefix + "calib-" + arig_utils::basename(file), image);
+        if (config->debug) {
+            drawChessboardCorners(image, board_sz, corners, found);
+            imwrite(config->outputPrefix + "calib-" + arig_utils::basename(file), image);
+        }
 
         if (config->testMode) {
             imshow("Calibration", image);
@@ -77,12 +52,10 @@ bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &
             image_points.push_back(corners);
             object_points.push_back(obj);
             image_sz = image.size();
-
-            successes++;
         }
     }
 
-    if (successes < numBoards) {
+    if (object_points.size() < numBoards) {
         spdlog::error("Nombre insuffisant d'images de calibration");
         return false;
     }
@@ -90,12 +63,38 @@ bool Calibration::run(Mat &cameraMatrix, Mat &distCoeffs, const vector<String> &
     vector<Mat> rvecs;
     vector<Mat> tvecs;
 
-    cameraMatrix.ptr<float>(0)[0] = 1;
-    cameraMatrix.ptr<float>(1)[1] = 1;
+    if (config->fisheye) {
+        Mat k = Mat(3, 3, CV_32FC1);
+        Mat d = Mat(4, 1, CV_32FC1);
 
-    calibrateCamera(object_points, image_points, image_sz, cameraMatrix, distCoeffs, rvecs, tvecs);
+        fisheye::calibrate(object_points, image_points, image_sz, k, d, rvecs, tvecs,
+                           fisheye::CALIB_RECOMPUTE_EXTRINSIC/* | fisheye::CALIB_CHECK_COND*/);
 
-    spdlog::info("CALIBRATION RESULT\n Boards detected {0}/{1}\n cameraMatrix {2}\n distCoeffs {3}", successes, files.size(), cameraMatrix, distCoeffs);
+        spdlog::info("CALIBRATION RESULT\n Boards detected {0}/{1}\n k {2}\n d {3}",
+                     object_points.size(), files.size(), k, d);
+
+        FileStorage fs(filename, FileStorage::WRITE);
+        fs << "k" << k;
+        fs << "d" << d;
+        fs.release();
+
+    } else {
+        Mat cameraMatrix = Mat(3, 3, CV_32FC1);
+        Mat distCoeffs;
+
+        cameraMatrix.ptr<float>(0)[0] = 1;
+        cameraMatrix.ptr<float>(1)[1] = 1;
+
+        calibrateCamera(object_points, image_points, image_sz, cameraMatrix, distCoeffs, rvecs, tvecs);
+
+        spdlog::info("CALIBRATION RESULT\n Boards detected {0}/{1}\n cameraMatrix {2}\n distCoeffs {3}",
+                     object_points.size(), files.size(), cameraMatrix, distCoeffs);
+
+        FileStorage fs(filename, FileStorage::WRITE);
+        fs << "cameraMatrix" << cameraMatrix;
+        fs << "distCoeffs" << distCoeffs;
+        fs.release();
+    }
 
     return true;
 }

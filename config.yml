@@ -6,6 +6,9 @@ cameraIndex: 0
 # résolution des photos brutes
 cameraResolution: [ 1280, 960 ]
 
+# la camera est une fishete (> 160°)
+fisheye: 1
+
 # procède à une conversion RGB -> BGR après lecture depuis la caméra
 swapRgb: 0
 

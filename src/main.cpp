@@ -61,6 +61,12 @@ int main(int argc, char **argv) {
     const String calibFilename = parser.get<String>("calibration-file");
     const String calibDir = parser.get<String>("calibration-dir");
 
+    // lecture de la config
+    if (!config.readConfigFile(configFilename)) {
+        spdlog::error("Unable to load configuration");
+        return 2;
+    }
+
     // calibration
     if (parser.has("calibration")) {
         Calibration calibration;
@@ -74,12 +80,6 @@ int main(int argc, char **argv) {
     // lecture de la calibration
     if (!config.readCalibrationFile(calibFilename)) {
         spdlog::warn("Not calibrated, please run --calibration");
-        return 2;
-    }
-
-    // lecture de la config
-    if (!config.readConfigFile(configFilename)) {
-        spdlog::error("Unable to load configuration");
         return 2;
     }
 
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     // création du thread de processing
     ProcessThread processThread(&config);
     if (!processThread.isReady()) {
-        spdlog::error("Cannot create OpenCV thread");
+        spdlog::error("Cannot create process thread");
         return 2;
     }
 

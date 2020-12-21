@@ -15,6 +15,8 @@ ProcessThread::ProcessThread(Config *config) {
 
         if (m_videoThread->waitReady()) {
             m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
+        } else {
+            spdlog::error("Cannot access camera within 5 seconds)");
         }
     }
 }
@@ -81,7 +83,7 @@ JsonResult ProcessThread::setIdle() {
 }
 
 /**
- * Affiche al dernière image dans uen fenêtre
+ * Affiche la dernière image dans uen fenêtre
  */
 void ProcessThread::displayPhoto() {
     pthread_mutex_lock(&m_datasMutex);

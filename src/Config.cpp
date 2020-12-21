@@ -20,6 +20,7 @@ bool Config::readConfigFile(const String &filename) {
 
     fs["cameraIndex"] >> cameraIndex;
     fs["cameraResolution"] >> cameraResolution;
+    fs["fisheye"] >> fisheye;
     fs["swapRgb"] >> swapRgb;
     fs["undistort"] >> undistort;
     fs["markerId"] >> markerId;
@@ -40,8 +41,13 @@ bool Config::readCalibrationFile(const String &filename) {
         return false;
     }
 
-    fs["cameraMatrix"] >> cameraMatrix;
-    fs["distCoeffs"] >> distCoeffs;
+    if (fisheye) {
+        fs["k"] >> cameraK;
+        fs["d"] >> cameraD;
+    } else {
+        fs["cameraMatrix"] >> cameraMatrix;
+        fs["distCoeffs"] >> distCoeffs;
+    }
 
     return true;
 }

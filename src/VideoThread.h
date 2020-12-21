@@ -35,8 +35,12 @@ public:
             return false;
         }
 
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += 5;
+
         pthread_mutex_lock(&m_datasMutex);
-        pthread_cond_wait(&m_readySignal, &m_datasMutex);
+        pthread_cond_timedwait(&m_readySignal, &m_datasMutex, &ts);
         pthread_mutex_unlock(&m_datasMutex);
 
         return m_cameraReady;
@@ -59,12 +63,11 @@ private:
         m_video = new VideoCapture(m_config->cameraIndex);
 
         pthread_mutex_lock(&m_datasMutex);
-        m_cameraReady = m_video->isOpened();
-        pthread_cond_signal(&m_readySignal);
-        pthread_mutex_unlock(&m_datasMutex);
 
-        if (!m_cameraReady) {
+        if (!m_video->isOpened()) {
             spdlog::error("Cannot open camera");
+            pthread_cond_signal(&m_readySignal);
+            pthread_mutex_unlock(&m_datasMutex);
             pthread_exit(nullptr);
         }
 
@@ -75,8 +78,16 @@ private:
         m_video->set(CV_CAP_PROP_FPS, 20);
         m_video->set(CV_CAP_PROP_BUFFERSIZE, 3);
 
+        bool first = true;
         while (!this->stop) {
             m_video->read(src);
+
+            if (first && src.data) {
+                m_cameraReady = true;
+                pthread_cond_signal(&m_readySignal);
+                pthread_mutex_unlock(&m_datasMutex);
+                first = false;
+            }
         }
 
         m_video->release();
