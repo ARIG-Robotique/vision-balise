@@ -6,7 +6,6 @@
 
 ProcessThread::ProcessThread(Config *config) {
     m_config = config;
-    m_action = ACTION_IDLE;
 
     if (!m_config->mockPhoto.empty()) {
         m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
@@ -15,8 +14,6 @@ ProcessThread::ProcessThread(Config *config) {
 
         if (m_videoThread->waitReady()) {
             m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
-        } else {
-            spdlog::error("Cannot access camera within 5 seconds)");
         }
     }
 }
@@ -41,7 +38,6 @@ JsonResult ProcessThread::getStatus() {
     json datas;
 
     pthread_mutex_lock(&m_datasMutex);
-    datas["cameraReady"] = true;
     datas["etalonnageDone"] = m_config->etalonnageDone;
     datas["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_datasMutex);
@@ -83,17 +79,10 @@ JsonResult ProcessThread::setIdle() {
 }
 
 /**
- * Affiche la dernière image dans uen fenêtre
+ * POUR TESTS UNIQUEMENT pas thread safe
  */
-void ProcessThread::displayPhoto() {
-    pthread_mutex_lock(&m_datasMutex);
-    if (!m_imgOrig.empty()) {
-        imshow("Photo", m_imgOrig);
-        waitKey(1);
-    } else {
-        spdlog::warn("Photo is empty");
-    }
-    pthread_mutex_unlock(&m_datasMutex);
+Mat& ProcessThread::getImgOrig() {
+    return m_imgOrig;
 }
 
 /**
@@ -101,6 +90,13 @@ void ProcessThread::displayPhoto() {
  * @return
  */
 JsonResult ProcessThread::startDetection() {
+    if (!m_config->etalonnageDone) {
+        JsonResult r;
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "L'étallonage n'est pas fait";
+        return r;
+    }
+
     return action(ACTION_DETECTION);
 }
 
@@ -113,17 +109,14 @@ JsonResult ProcessThread::startEtalonnage() {
 
     Etalonnage etalonnage(m_config);
 
-    JsonResult r;
-
-    if (takePhoto("etalonnage")) {
-        r.status = RESPONSE_OK;
-        r.datas = etalonnage.run(m_imgOrig);
+    if (takePhoto()) {
+        return etalonnage.run(m_imgOrig);
     } else {
+        JsonResult r;
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de prendre une photo";
+        return r;
     }
-
-    return r;
 }
 
 /**
@@ -180,7 +173,11 @@ void *ProcessThread::process() {
         action = m_action;
         pthread_mutex_unlock(&m_actionMutex);
 
-        if (action == ACTION_EXIT) {
+        if (action.empty()) {
+            spdlog::debug("ProcessThread: no action");
+            this_thread::sleep_for(chrono::milliseconds(m_config->idleDelay));
+
+        } else if (action == ACTION_EXIT) {
             if (m_videoThread != nullptr) {
                 m_videoThread->exit();
             }
@@ -204,7 +201,9 @@ void *ProcessThread::process() {
     pthread_exit(nullptr);
 }
 
-bool ProcessThread::takePhoto(const string &name) {
+bool ProcessThread::takePhoto() {
+    auto start = arig_utils::startTiming();
+
     if (!m_config->mockPhoto.empty()) {
         pthread_mutex_lock(&m_datasMutex);
         m_imgOrig = imread(m_config->mockPhoto, CV_LOAD_IMAGE_COLOR);
@@ -214,6 +213,7 @@ bool ProcessThread::takePhoto(const string &name) {
             spdlog::error("Could not open or find the mock image");
             return false;
         } else {
+            spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
             return true;
         }
     }
@@ -226,9 +226,9 @@ bool ProcessThread::takePhoto(const string &name) {
     } else {
         Mat undistorted;
         if (m_config->undistort) {
-            undistort(source, undistorted, m_config->cameraMatrix, m_config->distCoeffs);
+            remap(source, undistorted, m_config->remap1, m_config->remap2, INTER_LINEAR);
         } else {
-            undistorted = source.clone();
+            undistorted = source;
         }
 
         Mat final;
@@ -242,6 +242,7 @@ bool ProcessThread::takePhoto(const string &name) {
         m_imgOrig = final;
         pthread_mutex_unlock(&m_datasMutex);
 
+        spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
         return true;
     }
 }
@@ -262,11 +263,8 @@ void ProcessThread::processIdle() {
             break;
         }
 
-        auto start = arig_utils::startTiming();
-        if (takePhoto("idle-" + to_string(i))) {
-            spdlog::info("Photo took in {}ms", arig_utils::ellapsedTime(start));
-
-            if (i % 10 == 0) {
+        if (takePhoto()) {
+            if (m_config->debug || i % 10 == 0) {
                 imwrite(m_config->outputPrefix + "idle-" + to_string(i) + ".jpg", m_imgOrig);
             }
         }
@@ -295,7 +293,7 @@ void ProcessThread::processDetection() {
             break;
         }
 
-        if (takePhoto("detection-" + to_string(i))) {
+        if (takePhoto()) {
             json r = detection.run(m_imgOrig, i);
 
             pthread_mutex_lock(&m_datasMutex);

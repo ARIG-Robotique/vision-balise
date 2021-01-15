@@ -23,7 +23,6 @@ bool Config::readConfigFile(const String &filename) {
     fs["fisheye"] >> fisheye;
     fs["swapRgb"] >> swapRgb;
     fs["undistort"] >> undistort;
-    fs["markerId"] >> markerId;
     fs["probeSize"] >> probeSize;
     fs["colorThreshold"] >> colorThreshold;
     fs["detectionBuffer"] >> detectionBuffer;
@@ -44,10 +43,60 @@ bool Config::readCalibrationFile(const String &filename) {
     if (fisheye) {
         fs["k"] >> cameraK;
         fs["d"] >> cameraD;
+
+        Mat newCameraMatrix;
+        fisheye::estimateNewCameraMatrixForUndistortRectify(cameraK, cameraD, cameraResolution,
+                                                            Matx33d::eye(), newCameraMatrix, 0.0);
+        fisheye::initUndistortRectifyMap(cameraK, cameraD,
+                                         Matx33d::eye(), newCameraMatrix, cameraResolution,
+                                         CV_16SC2, remap1, remap2);
+
     } else {
         fs["cameraMatrix"] >> cameraMatrix;
         fs["distCoeffs"] >> distCoeffs;
+
+        Mat newCameraMatrix = getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, cameraResolution, 0.0);
+        initUndistortRectifyMap(cameraMatrix, distCoeffs,
+                                Matx33d::eye(), newCameraMatrix, cameraResolution,
+                                CV_16SC2, remap1, remap2);
     }
 
     return true;
+}
+
+// H +- 10
+// S +- 75
+// V +- 100
+vector<Scalar> Config::getRedRange() const {
+    auto hMin = red[0] - 10;
+    if (hMin < 0) {
+        hMin += 180;
+    }
+    auto hMax = red[0] + 10;
+    if (hMax > 180) {
+        hMax -= 180;
+    }
+    return {
+            Scalar(hMin, max(red[1] - 75, 0.0), max(red[2] - 100, 0.0)),
+            Scalar(hMax, min(red[1] + 75, 255.0), max(red[2] + 100, 255.0)),
+    };
+}
+
+// H +- 10
+// S +- 50
+// V +- 50
+vector<Scalar> Config::getGreenRange() const {
+    return {
+            Scalar(green[0] - 10, max(green[1] - 50, 0.0), max(green[2] - 50, 0.0)),
+            Scalar(green[0] + 10, min(green[1] + 50, 255.0), min(green[2] + 50, 255.0))
+    };
+}
+
+vector<Point> Config::getDetectionZone() const {
+    return {
+            Point(cameraResolution.width / 2 - 150, 100),
+            Point(cameraResolution.width / 2 + 150, 100),
+            Point(cameraResolution.width - 50, cameraResolution.height - 250),
+            Point(50, cameraResolution.height - 250),
+    };
 }

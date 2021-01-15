@@ -43,6 +43,10 @@ public:
         pthread_cond_timedwait(&m_readySignal, &m_datasMutex, &ts);
         pthread_mutex_unlock(&m_datasMutex);
 
+        if (!m_cameraReady) {
+            spdlog::error("Cannot access camera within 5 seconds)");
+        }
+
         return m_cameraReady;
     }
 

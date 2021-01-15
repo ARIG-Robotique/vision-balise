@@ -7,9 +7,9 @@
 class Config {
 
 public:
+    // from cli
     bool debug = false;
     bool testMode = false;
-    String outputDir;
     String outputPrefix;
     String mockPhoto;
 
@@ -18,6 +18,7 @@ public:
     Mat distCoeffs;
     Mat cameraK;
     Mat cameraD;
+    Mat remap1, remap2;
 
     // from config
     int cameraIndex;
@@ -25,7 +26,6 @@ public:
     bool fisheye;
     bool swapRgb;
     bool undistort;
-    int markerId;
     int probeSize;
     int colorThreshold;
     int detectionBuffer;
@@ -33,14 +33,16 @@ public:
     int idleDelay;
     int detectionDelay;
 
-    // from API
-    vector<Point> ecueil;
-    vector<Point> bouees;
-
     // from etalonnage
     bool etalonnageDone = false;
-    vector<Scalar> colorsEcueil;
-    vector<Scalar> colorsBouees;
+    String team = TEAM_UNKNOWN;
+    Scalar red, green;
+    Mat perspectiveMap;
+    Size perspectiveSize;
+
+    vector<Scalar> getRedRange() const;
+    vector<Scalar> getGreenRange() const;
+    vector<Point> getDetectionZone() const;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);

@@ -4,10 +4,7 @@
 Detection::Detection(Config *config) {
     this->config = config;
 
-    for (auto i = 0; i < 5; i++) {
-        ecueilBuffer.emplace_back(vector<int>(config->detectionBuffer, 0));
-    }
-    for (auto i = 0; i < config->bouees.size(); i++) {
+    for (auto i = 0; i < 8; i++) {
         boueesBuffer.emplace_back(vector<int>(config->detectionBuffer, 0));
     }
 }
@@ -18,37 +15,33 @@ json Detection::run(const Mat &source, int index) {
 
     json r;
 
-    // recherche des marqueurs
-    vector<int> markerIds;
-    vector<vector<Point2f>> markerCorners;
-    findMarkers(source, markerCorners, markerIds);
+    Mat projected, imageHsv, output;
+    warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
+    cvtColor(projected, imageHsv, COLOR_BGR2HSV);
 
     if (config->debug || index % 10 == 0) {
-        Mat output = source.clone();
-        aruco::drawDetectedMarkers(output, markerCorners, markerIds);
-        // TODO draw probes
-        imwrite(config->outputPrefix + "detection-markers-" + to_string(index) + ".jpg", output);
+        output = projected.clone();
     }
 
-    vector<Point2f> marker = getMarkerById(markerCorners, markerIds, config->markerId);
-
-    if (marker.empty()) {
-        spdlog::info("Marker not found");
-        r["direction"] = DIR_UNKNOWN;
-    } else {
-        bool upside = isMarkerUpside(marker);
-        r["direction"] = upside ? DIR_UP : DIR_DOWN;
+    // LECTURE GIROUETTE
+    vector<string> girouette;
+    if (lectureGirouette(imageHsv, output, girouette)) {
+        r["girouette"] = girouette.at(0);
     }
 
-    // lecture des couleurs
-    if (config->etalonnageDone) {
-        auto ecueil = readColorsEcueil(source);
-        r["ecueil"] = arig_utils::strings2json(ecueil);
+    // LECTURE ECUEILS
+    vector<string> ecueilEquipe, ecueilAdverse;
+    if (lectureEcueil(imageHsv, output, false, ecueilEquipe) &&
+        lectureEcueil(imageHsv, output, true, ecueilAdverse)) {
+        // TODO nettoyage des données erronées à cause de la perspective
+        r["ecueilEquipe"] = arig_utils::strings2json(ecueilEquipe);
+        r["ecueilAdverse"] = arig_utils::strings2json(ecueilAdverse);
+    }
 
-        if (!config->bouees.empty()) {
-            auto bouees = checkPresenceBouees(source);
-            r["bouees"] = arig_utils::strings2json(bouees);
-        }
+    // CONTROLE BOUEES
+    vector<string> bouees;
+    if (controleBouees(imageHsv, output, bouees)) {
+        r["bouees"] = arig_utils::strings2json(bouees);
 
         bufferIndex++;
         if (bufferIndex == config->detectionBuffer) {
@@ -56,132 +49,133 @@ json Detection::run(const Mat &source, int index) {
         }
     }
 
+    // DETECTION BOUEES
+    vector<Scalar> redRange = config->getRedRange();
+    vector<Scalar> greenRange = config->getGreenRange();
+
+    vector<pair<string, Point>> hautFond;
+    if (detectionBouees(imageHsv, output, redRange, hautFond) &&
+        detectionBouees(imageHsv, output, greenRange, hautFond)) {
+        json rHautFond;
+
+        for (auto &tmp : hautFond) {
+            rHautFond.emplace_back(json({tmp.first, tmp.second.x, tmp.second.y}));
+        }
+
+        r["hautFond"] = rHautFond;
+    }
+
+    if (!output.empty()) {
+        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", output);
+    }
+
     spdlog::debug(r.dump(2));
-    spdlog::debug("Done in {}ms", arig_utils::ellapsedTime(start));
+    spdlog::debug("Détection en {}ms", arig_utils::ellapsedTime(start));
 
     return r;
 }
 
 /**
- * Trouve les marqueurs ARUCO sur l'image
- * @param image
- * @param markerCorners
- * @param markerIds
+ * Lit la direction de la girouette
  */
-void Detection::findMarkers(const Mat &image, vector<vector<Point2f>> &markerCorners, vector<int> &markerIds) {
-    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string> &girouette) {
+    auto probe = arig_utils::getProbe(
+            arig_utils::tablePtToImagePt(Point(1500, 20)),
+            config->probeSize
+    );
+    auto color = arig_utils::getAverageColor(imageHsv, probe);
 
-    aruco::detectMarkers(image, dictionary, markerCorners, markerIds);
-
-    if (spdlog::default_logger()->level() == spdlog::level::debug) {
-        stringstream ss;
-        ss << "MARKERS RESULT" << endl;
-        ss << "MarkersIds: ";
-        for (auto const &id : markerIds) ss << to_string(id) << ",";
-        ss << endl;
-        ss << "MarkersPos: ";
-        for (auto const &marker : markerCorners) {
-            ss << "(";
-            for (auto const &pos : marker) ss << pos << ",";
-            ss << ") ";
-        }
-
-        spdlog::debug(ss.str());
-    }
-}
-
-/**
- * Retourne un marqueur par son id
- * @param markerCorners
- * @param markerIds
- * @param id
- * @return
- */
-vector<Point2f> Detection::getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id) {
-    for (unsigned long i = 0; i < markerIds.size(); i++) {
-        if (markerIds.at(i) == id) {
-            return markerCorners.at(i);
-        }
+    string res;
+    if (color[2] > 150) {
+        res = DIR_DOWN;
+    } else if (color[2] < 100) {
+        res = DIR_UP;
+    } else {
+        res = DIR_UNKNOWN;
     }
 
-    return vector<Point2f>();
+    if (!output.empty()) {
+        rectangle(output, probe, arig_utils::BLUE, 1);
+        putText(output, res, probe.tl(), 0, 0.5, arig_utils::WHITE);
+    }
+
+    return false;
 }
 
 /**
- * Vérifie si un marqueur est plutot orienté vers le haut de l'image
- * Evo possible  utiliser estimatePoseSingleMarkers
- * @param marker
- * @return
+ * Lit les couleurs d'un ecueil
  */
-bool Detection::isMarkerUpside(vector<Point2f> &marker) {
-    // 0         1
-    //  +-------+
-    //  |       |
-    //  |       |
-    //  +-------+
-    // 3         2
-    float y0 = marker.at(0).y;
-    float y3 = marker.at(3).y;
-    float x0 = marker.at(0).x;
-    float x1 = marker.at(1).x;
-    return y0 < y3 && x0 < x1;
-}
-
-/**
- * Lecture des cinq couleurs de l'ecueil
- */
-vector<string> Detection::readColorsEcueil(const Mat &image) {
-    vector<string> colors;
-
-    auto dX = config->ecueil[1].x - config->ecueil[0].x;
-    auto dY = config->ecueil[1].y - config->ecueil[0].y;
-
+bool Detection::lectureEcueil(const Mat &imageHsv, Mat &output, bool adverse, vector<string> &ecueil) {
+    vector<Rect> probes;
     for (auto i = 0; i < 5; i++) {
-        auto pt = Point(config->ecueil[0].x + dX / 4.0 * i, config->ecueil[0].y + dY / 4.0 * i);
-        auto color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
-        auto hue = arig_utils::ScalarBGR2HSV(color)[0];
+        // x et y dans le coordonnées de la table
+        int x = adverse ? (2000 + i * 75) : (1000 - i * 75);
+        int y = -67;
+        if (config->team == TEAM_JAUNE) {
+            x = 3000 - x;
+        }
 
-        auto dRed = abs(hue - config->colorsEcueil[1][0]);
+        // offset x et y en pixels sur l'image
+        int offsetX = adverse ? -(30 + 20 * i / 4.0) : (20 + 20 * i / 4.0);
+        int offsetY = 5;
+        if (config->team == TEAM_JAUNE) {
+            offsetX *= -1;
+        }
+
+        auto probe = arig_utils::tablePtToImagePt(Point(x, y)) + Point(offsetX, offsetY);
+        probes.emplace_back(arig_utils::getProbe(probe, 15));
+    }
+
+    for (auto &probe : probes) {
+        auto color = arig_utils::getAverageColor(imageHsv, probe);
+
+        auto dRed = abs(color[0] - config->red[0]);
         dRed = min(dRed, 180 - dRed);
-        auto dGreen = abs(hue - config->colorsEcueil[0][0]);
+        auto dGreen = abs(color[0] - config->green[0]);
         dGreen = min(dGreen, 180 - dGreen);
 
+        string res;
         if (dRed < config->colorThreshold) {
-            ecueilBuffer[i][bufferIndex] = 1;
+            res = COLOR_RED;
         } else if (dGreen < config->colorThreshold) {
-            ecueilBuffer[i][bufferIndex] = -1;
+            res = COLOR_GREEN;
         } else {
-            ecueilBuffer[i][bufferIndex] = 0;
+            res = COLOR_UNKNOWN;
         }
+        ecueil.emplace_back(res);
 
-        auto val = 0.0;
-        for (auto j = 0; j < config->detectionBuffer; j++) {
-            val += ecueilBuffer[i][j];
-        }
-
-        if (val >= config->detectionValidLimit) {
-            colors.emplace_back(COLOR_RED);
-        } else if (val <= -config->detectionValidLimit) {
-            colors.emplace_back(COLOR_GREEN);
-        } else {
-            colors.emplace_back(COLOR_UNKNOWN);
+        if (!output.empty()) {
+            rectangle(output, probe, arig_utils::WHITE, 1);
+            putText(output, res, probe.tl(), 0, 0.5, arig_utils::WHITE);
         }
     }
 
-    return colors;
+    return true;
 }
 
 /**
- * Vérification de présence de chaque bouée
+ * Controle la présence des bouees centrales
  */
-vector<string> Detection::checkPresenceBouees(const Mat &image) {
-    vector<string> result;
+bool Detection::controleBouees(const Mat &imageHsv, Mat &output, vector<string> &bouees) {
+    // 5 to 12
+    vector<pair<Scalar, Point2f>> positions = {
+            {config->green, Point(2330, 100)},
+            {config->red,   Point(2044, 400)},
+            {config->green, Point(1900, 800)},
+            {config->red,   Point(1730, 1200)},
+            {config->green, Point(1270, 1200)},
+            {config->red,   Point(1100, 800)},
+            {config->green, Point(956, 400)},
+            {config->red,   Point(670, 100)},
+    };
 
-    for (auto i = 0; i < config->bouees.size(); i++) {
-        auto pt = config->bouees[i];
-        auto color = arig_utils::getAverageColor(image, arig_utils::getProbe(pt, config->probeSize));
+    for (auto i = 0; i < positions.size(); i++) {
+        auto position = positions.at(i);
+        auto probe = arig_utils::getProbe(arig_utils::tablePtToImagePt(position.second),
+                                          config->probeSize);
+        auto color = arig_utils::getAverageColor(imageHsv, probe);
 
-        auto d = abs(arig_utils::ScalarBGR2HSV(color)[0] - config->colorsBouees[i][0]);
+        auto d = abs(color[0] - position.first[0]);
         d = min(d, 180 - d);
 
         if (d < config->colorThreshold) {
@@ -195,12 +189,89 @@ vector<string> Detection::checkPresenceBouees(const Mat &image) {
             val += boueesBuffer[i][j];
         }
 
+        string res;
         if (val >= config->detectionValidLimit) {
-            result.emplace_back(BOUE_PRESENT);
+            res = BOUE_PRESENT;
         } else {
-            result.emplace_back(BOUE_ABSENT);
+            res = BOUE_ABSENT;
+        }
+        bouees.emplace_back(res);
+
+        if (!output.empty()) {
+            rectangle(output, probe, arig_utils::WHITE, 1);
+            putText(output, res, probe.tl(), 0, 0.5, arig_utils::WHITE);
         }
     }
 
-    return result;
+    return true;
+}
+
+/**
+ * Recherche les bouees dans le haut fond
+ */
+bool Detection::detectionBouees(const Mat &imageHsv, Mat &output, const vector<Scalar> &colorRange,
+                                vector<pair<string, Point>> &bouees) {
+    Mat imageThreshold;
+    arig_utils::hsvInRange(imageHsv, colorRange, imageThreshold);
+    erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+    dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+
+    vector<vector<Point>> contours;
+    findContours(imageThreshold, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+    for (auto i = 0; i < contours.size(); i++) {
+        auto contour = contours.at(i);
+        Moments moment = moments(contour);
+        double area = moment.m00;
+
+        if (area < 800 || area > 3000) {
+            continue;
+        }
+
+        double x = moment.m10 / area;
+        double y = moment.m01 / area;
+
+        // filtrage dans la zone de hauts fonds
+        double dst = pow(750 - x, 2) + pow(1000 - y, 2);
+        if (dst > 250 * 250 || y > 1000) {
+            continue;
+        }
+
+        Point pt;
+        pt.x = arig_utils::averageX(arig_utils::pointsOfMaxY(contour));
+        if (x > config->perspectiveSize.width / 2.0) {
+            pt.y = arig_utils::averageY(arig_utils::pointsOfMinX(contour));
+        } else {
+            pt.y = arig_utils::averageY(arig_utils::pointsOfMaxX(contour));
+        }
+
+        auto probe = arig_utils::getProbe(pt, config->probeSize);
+        auto color = arig_utils::getAverageColor(imageHsv, probe);
+
+        auto dRed = abs(color[0] - config->red[0]);
+        dRed = min(dRed, 180 - dRed);
+        auto dGreen = abs(color[0] - config->green[0]);
+        dGreen = min(dGreen, 180 - dGreen);
+
+        string res;
+        if (dRed < config->colorThreshold) {
+            res = COLOR_RED;
+        } else if (dGreen < config->colorThreshold) {
+            res = COLOR_GREEN;
+        } else {
+            res = COLOR_UNKNOWN;
+        }
+
+        const Point tablePt = arig_utils::imagePtToTablePt(pt);
+        bouees.emplace_back(make_pair(res, tablePt));
+
+        if (!output.empty()) {
+            drawContours(output, contours, i, arig_utils::BLACK, 2);
+            rectangle(output, probe, arig_utils::WHITE, 1);
+            String txt = to_string(tablePt.x) + "x" + to_string(tablePt.y) + " : " + res;
+            putText(output, txt, probe.tl(), 0, 0.5, arig_utils::WHITE);
+        }
+    }
+
+    return true;
 }

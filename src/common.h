@@ -31,6 +31,10 @@ using json = nlohmann::json;
 #define COLOR_GREEN "GREEN"
 #define COLOR_UNKNOWN "UNKNOWN"
 
+#define TEAM_BLEU "BLEU"
+#define TEAM_JAUNE "JAUNE"
+#define TEAM_UNKNOWN "UNKNOWN"
+
 #define DIR_UP "UP"
 #define DIR_DOWN "DOWN"
 #define DIR_UNKNOWN "UNKNOWN"

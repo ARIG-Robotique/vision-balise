@@ -4,33 +4,55 @@
 #include "common.h"
 
 namespace arig_utils {
-    Scalar ScalarBGR2HSV(Scalar bgr);
+    extern const Scalar RED;
+    extern const Scalar GREEN;
+    extern const Scalar BLUE;
+    extern const Scalar WHITE;
+    extern const Scalar BLACK;
 
-    Scalar ScalarHSV2BGR(Scalar hsv);
+    Scalar ScalarBGR2HSV(const Scalar &bgr);
 
-    void fillRectangle(Mat &mat, Rect &r, Scalar color);
+    Scalar ScalarHSV2BGR(const Scalar &hsv);
 
-    Rect getProbe(Point pt, int probeSize);
+    void fillRectangle(Mat &mat, const Rect &r, const Scalar &color);
 
-    Scalar getAverageColor(const Mat &mat, Rect r);
+    Rect getProbe(const Point &pt, int probeSize);
 
-    json points2json(vector<Point> &points);
+    Scalar getAverageColor(const Mat &mat, const Rect &r);
 
-    json strings2json(vector<string> &values);
+    json points2json(const vector<Point> &points);
 
-    vector<Point> json2points(json &data);
+    json strings2json(const vector<string> &values);
 
-    json scalar2json(Scalar scalar);
+    vector<Point> json2points(const json &data);
 
-    json scalars2json(vector<Scalar> &scalars);
+    json scalar2json(const Scalar &scalar);
 
-    string basename(string const & path);
+    json scalars2json(const vector<Scalar> &scalars);
+
+    string basename(const string &path);
 
     string matToBase64(const Mat &mat);
 
     chrono::high_resolution_clock::time_point startTiming();
 
     long ellapsedTime(chrono::high_resolution_clock::time_point start);
+
+    vector<Point> pointsOfMaxX(const vector<Point> &points);
+
+    vector<Point> pointsOfMinX(const vector<Point> &points);
+
+    vector<Point> pointsOfMaxY(const vector<Point> &points);
+
+    double averageX(const vector<Point> &points);
+
+    double averageY(const vector<Point> &points);
+
+    Point tablePtToImagePt(const Point &pt);
+
+    Point imagePtToTablePt(const Point &pt);
+
+    void hsvInRange(const Mat &imageHsv, const vector<Scalar> &range, Mat &output);
 }
 
 #endif //VISION_BALISE_UTILS_H

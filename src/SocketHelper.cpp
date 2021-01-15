@@ -40,7 +40,6 @@ bool SocketHelper::isUnknown() {
 }
 
 void SocketHelper::init() {
-    spdlog::debug("Initialisation de la socket ...");
     if (this->isInet()) {
         initSocketInet();
     } else if (this->isUnix()) {

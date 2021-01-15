@@ -5,56 +5,216 @@ Etalonnage::Etalonnage(Config *config) {
     this->config = config;
 }
 
-json Etalonnage::run(const Mat &source) {
+JsonResult Etalonnage::run(const Mat &source) {
     auto start = arig_utils::startTiming();
     spdlog::info("ETALONNAGE");
 
     Mat output = source.clone();
-    json r;
+    JsonResult r;
 
-    config->colorsEcueil = readColors(source, config->ecueil);
-    r["ecueil"] = arig_utils::scalars2json(config->colorsEcueil);
-    drawProbes(output, config->ecueil, config->colorsEcueil);
-
-    if (!config->bouees.empty()) {
-        config->colorsBouees = readColors(source, config->bouees);
-        r["bouees"] = arig_utils::scalars2json(config->colorsBouees);
-        drawProbes(output, config->bouees, config->colorsBouees);
-    } else {
-        config->colorsBouees.clear();
+    // DETECTION DU MARKER
+    Point markerCenter;
+    if (!detectMarker(source, output, markerCenter)) {
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "Impossible de trouver le marqueur";
+        return r;
     }
+
+    spdlog::debug("Marker 42 found : {}", markerCenter);
+
+    config->team = markerCenter.x > config->cameraResolution.width / 2.0 ? TEAM_BLEU : TEAM_JAUNE;
+    spdlog::debug("Équipe {}", config->team);
+
+
+    // CALIBRATION DES COULEURS
+    if (!calibCouleurs(source, output, markerCenter)) {
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "Impossible de calibrer les couleurs";
+        return r;
+    }
+
+    spdlog::debug("Rouge {}", config->red);
+    spdlog::debug("Vert {}", config->green);
+
+
+    // DETECTION DE BOUEES AUX EXTREMITES
+    // zone de detection pour eviter les faux positifs
+    vector<Point> detectionZone = config->getDetectionZone();
+    vector<Scalar> redRange = config->getRedRange();
+    vector<Scalar> greenRange = config->getGreenRange();
+
+    Mat imageHsv;
+    cvtColor(source, imageHsv, COLOR_BGR2HSV);
+
+    Point bouee8, bouee12, bouee5, bouee9;
+    if (!detectBouees(imageHsv, output, redRange, detectionZone, false, bouee8, bouee12) ||
+        !detectBouees(imageHsv, output, greenRange, detectionZone, true, bouee9, bouee5)) {
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "Impossible de détecter les bouées";
+        return r;
+    }
+
+    spdlog::debug("Bouee 8 : {}", bouee8);
+    spdlog::debug("Bouee 12 : {}", bouee12);
+    spdlog::debug("Bouee 9 : {}", bouee9);
+    spdlog::debug("Bouee 5 : {}", bouee5);
+
+    drawContours(output, {detectionZone}, 0, arig_utils::BLUE);
+    circle(output, bouee8, 20, arig_utils::RED, 2);
+    circle(output, bouee12, 20, arig_utils::RED, 2);
+    circle(output, bouee9, 20, arig_utils::GREEN, 2);
+    circle(output, bouee5, 20, arig_utils::GREEN, 2);
+
+
+    // CALCUL PERSPECTIVE
+    Point2f ptsImages[] = {bouee9, bouee8, bouee5, bouee12};
+    Point2f ptsProj[] = {
+            Point2f((3000 - 1270) / 2.0, (2000 - 1200) / 2.0),
+            Point2f((3000 - 1730) / 2.0, (2000 - 1200) / 2.0),
+            Point2f((3000 - 2330) / 2.0, (2000 - 100) / 2.0),
+            Point2f((3000 - 670) / 2.0, (2000 - 100) / 2.0)
+    };
+
+    config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
+    config->perspectiveSize = Size(1500, 1100);
 
     imwrite(config->outputPrefix + "etallonage.jpg", output);
 
+    r.status = RESPONSE_OK;
+    r.datas = arig_utils::matToBase64(output);
+
     config->etalonnageDone = true;
 
-    spdlog::debug(r.dump(2));
-    spdlog::debug("Done in {}ms", arig_utils::ellapsedTime(start));
+    spdlog::debug("Etalonnage en {}ms", arig_utils::ellapsedTime(start));
 
     return r;
 }
 
-vector<Scalar> Etalonnage::readColors(const Mat &source, vector<Point> &points) {
-    vector<Scalar> colors;
+/**
+ * Cherche le marker 42, retourne le centre du bord bas
+ */
+bool Etalonnage::detectMarker(const Mat &source, Mat &output, Point &pt) {
+    vector<int> markerIds;
+    vector<vector<Point2f>> markerCorners;
+    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+    aruco::detectMarkers(source, dictionary, markerCorners, markerIds);
+    aruco::drawDetectedMarkers(output, markerCorners, markerIds);
 
-    for (auto &pt : points) {
-        Scalar color = arig_utils::getAverageColor(source, arig_utils::getProbe(pt, config->probeSize));
-        colors.emplace_back(arig_utils::ScalarBGR2HSV(color));
+    vector<Point2f> marker42;
+    for (auto i = 0; i < markerIds.size(); i++) {
+        if (markerIds.at(i) == 42) {
+            marker42 = markerCorners.at(i);
+            break;
+        }
     }
 
-    return colors;
+    if (marker42.empty()) {
+        spdlog::error("Cannot find the marker 42");
+        return false;
+
+    } else {
+        pt.x = (marker42.at(0).x + marker42.at(1).x) / 2.0;
+        pt.y = (marker42.at(0).y + marker42.at(1).y) / 2.0;
+        return true;
+    }
 }
 
-void Etalonnage::drawProbes(const Mat &output, vector<Point> &points, vector<Scalar> &colors) {
-    auto white = Scalar(255, 255, 255);
+/**
+ * Récupère les couleurs de référence rouge et vert
+ */
+bool Etalonnage::calibCouleurs(const Mat &source, Mat &output, const Point &markerCenter) {
+    Point bouee9 = markerCenter + Point(-85, 0);
+    Point bouee8 = markerCenter + Point(85, 0);
 
-    for (auto i = 0; i < points.size(); i++) {
-        Rect probe = arig_utils::getProbe(points[i], config->probeSize);
-        Rect display = arig_utils::getProbe(points[i] - Point(40, 40), config->probeSize);
+    Rect probeRed = arig_utils::getProbe(bouee9, config->probeSize);
+    rectangle(output, probeRed.tl(), probeRed.br(), arig_utils::WHITE);
 
-        rectangle(output, probe.tl(), probe.br(), white);
-        line(output, probe.tl(), display.br(), white);
-        rectangle(output, display.tl(), display.br(), arig_utils::ScalarHSV2BGR(colors[i]), FILLED);
-        rectangle(output, display.tl(), display.br(), white);
+    Rect probeGreen = arig_utils::getProbe(bouee8, config->probeSize);
+    rectangle(output, probeGreen.tl(), probeGreen.br(), arig_utils::WHITE);
+
+    config->red = arig_utils::ScalarBGR2HSV(arig_utils::getAverageColor(source, probeRed));
+    config->green = arig_utils::ScalarBGR2HSV(arig_utils::getAverageColor(source, probeGreen));
+
+    return true;
+}
+
+/**
+ * Fait une detection de couleur pour trouver les balises extrêmes
+ */
+bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
+                              const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
+                              Point boueeTop, Point boueeSide) {
+    Mat imageThreshold;
+    arig_utils::hsvInRange(imageHsv, colorRange, imageThreshold);
+    erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+    dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+
+    vector<vector<Point>> contours;
+    findContours(imageThreshold, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+    // boueeTop : bouee de min Y
+    // boueeSide : bouee de min/max X (selon sideIsMinX)
+    vector<Point> contourBoueeTop, contourBoueeSide;
+    double minY = config->cameraResolution.width;
+    double minX = config->cameraResolution.height;
+    double maxX = 0;
+
+    for (auto i = 0; i < contours.size(); i++) {
+        Moments moment = moments(contours.at(i));
+        double area = moment.m00;
+
+        if (area < 800 || area > 3000) {
+            continue;
+        }
+
+        double x = moment.m10 / area;
+        double y = moment.m01 / area;
+
+        // filtrage dans le polygone de recherche
+        if (pointPolygonTest(zone, Point(x, y), false) < 0) {
+            continue;
+        }
+
+        if (sideIsMinX && x < minX) {
+            minX = x;
+            contourBoueeSide = contours.at(i);
+        }
+        if (!sideIsMinX && x > maxX) {
+            maxX = x;
+            contourBoueeSide = contours.at(i);
+        }
+        if (y < minY) {
+            minY = y;
+            contourBoueeTop = contours.at(i);
+        }
+
+        drawContours(output, contours, i, arig_utils::BLACK, 2);
+        putText(output, to_string((int) area), Point(x, y), 0, 0.5, arig_utils::WHITE);
     }
+
+    if (contourBoueeTop.empty() || contourBoueeSide.empty()) {
+        spdlog::error("Cannot find color clusters");
+        return false;
+    }
+
+    // on cherche la position de la base de chaque bouee
+    // x = x milieu des points de la bordure basse du contours (max y)
+    // y = y milieu des points de la bordure gauche ou droite (min x ou max x)
+    //      selon si la bouee est à droite ou gauche de l'image, respectivement
+
+    boueeTop.x = arig_utils::averageX(arig_utils::pointsOfMaxY(contourBoueeTop));
+    if (contourBoueeTop.at(0).x > config->cameraResolution.width / 2.0) {
+        boueeTop.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeTop));
+    } else {
+        boueeTop.y = arig_utils::averageY(arig_utils::pointsOfMaxX(contourBoueeTop));
+    }
+
+    boueeSide.x = arig_utils::averageX(arig_utils::pointsOfMaxY(contourBoueeSide));
+    if (contourBoueeSide.at(0).x > config->cameraResolution.width / 2.0) {
+        boueeSide.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeSide));
+    } else {
+        boueeSide.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeSide));
+    }
+
+    return true;
 }

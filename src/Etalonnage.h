@@ -7,15 +7,21 @@
 class Etalonnage {
 
 private:
-    Config* config;
+    Config *config;
 
 public:
-    explicit Etalonnage(Config* config);
-    json run(const Mat &source);
+    explicit Etalonnage(Config *config);
+
+    JsonResult run(const Mat &source);
 
 private:
-    vector<Scalar> readColors(const Mat &source, vector<Point> &points);
-    void drawProbes(const Mat &output, vector<Point> &points, vector<Scalar>& colors);
+    bool detectMarker(const Mat &source, Mat &output, Point &pt);
+
+    bool calibCouleurs(const Mat &source, Mat &output, const Point &markerCenter);
+
+    bool detectBouees(const Mat &imageHsv, Mat &output,
+                      const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
+                      Point boueeTop, Point boueeSide);
 };
 
 

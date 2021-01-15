@@ -13,10 +13,7 @@ fisheye: 1
 swapRgb: 0
 
 # annule la distortion optique
-undistort: 0
-
-# Identifiant du marqueur à détecter
-markerId: 17
+undistort: 1
 
 # largeur des sondes de couleur en pixels
 probeSize: 20

@@ -10,7 +10,6 @@ private:
     Config* config;
 
     short bufferIndex = 0;
-    vector<vector<int>> ecueilBuffer;
     vector<vector<int>> boueesBuffer;
 
 public:
@@ -18,11 +17,10 @@ public:
     json run(const Mat &source, int index);
 
 private:
-    void findMarkers(const Mat &image, vector<vector<Point2f>> &markerCorners, vector<int> &markerIds);
-    vector<Point2f> getMarkerById(vector<vector<Point2f>> &markerCorners, vector<int> &markerIds, int id);
-    bool isMarkerUpside(vector<Point2f> &marker);
-    vector<string> readColorsEcueil(const Mat &image);
-    vector<string> checkPresenceBouees(const Mat &image);
+    bool lectureGirouette(const Mat &imageHsv, Mat &output, vector<string> &girouette);
+    bool lectureEcueil(const Mat &imageHsv, Mat &output, bool adverse, vector<string> &ecueil);
+    bool controleBouees(const Mat &imageHsv, Mat &output, vector<string> &bouees);
+    bool detectionBouees(const Mat &imageHsv, Mat &output, const vector<Scalar> &colorRange, vector<pair<string, Point>> &bouees);
 };
 
 

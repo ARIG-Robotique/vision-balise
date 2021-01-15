@@ -1,10 +1,10 @@
 #include <ctime>
+#include "spdlog/sinks/basic_file_sink.h"
 #include "common.h"
 #include "Calibration.h"
 #include "SocketHelper.h"
 #include "ProcessThread.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "utils.h"
+#include "test.h"
 
 int main(int argc, char **argv) {
     const String keys =
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
             "{mock-photo | | Camera mock file }";
 
     CommandLineParser parser(argc, argv, keys);
-    parser.about("ARIG Vision Balise 2020");
+    parser.about("ARIG Vision Balise 2021");
 
     if (parser.has("help")) {
         parser.printMessage();
@@ -54,7 +54,6 @@ int main(int argc, char **argv) {
     Config config;
     config.debug = parser.has("debug") || parser.has("test");
     config.testMode = parser.has("test");
-    config.outputDir = outputDir;
     config.outputPrefix = outputPrefix;
 
     const String configFilename = parser.get<String>("config-file");
@@ -87,10 +86,29 @@ int main(int argc, char **argv) {
         config.mockPhoto = parser.get<string>("mock-photo");
     }
 
+    // création du thread de processing
+    ProcessThread processThread(&config);
+    if (!processThread.isReady()) {
+        spdlog::error("Cannot create process thread");
+        return 2;
+    }
+
+    // mode de test
+    if (config.testMode) {
+        config.undistort = false;
+        if (processThread.takePhoto()) {
+            runTest(processThread.getImgOrig(), &config);
+            return 0;
+        } else {
+            return 2;
+        }
+    }
+
     // ouverture de la socket
     SocketHelper socket(parser.get<string>("socket-type"));
     if (socket.isUnknown()) {
         spdlog::error("Invalid socket type");
+        processThread.exit();
         return 2;
 
     } else if (socket.isInet()) {
@@ -101,21 +119,7 @@ int main(int argc, char **argv) {
     }
 
     socket.init();
-
-    // création du thread de processing
-    ProcessThread processThread(&config);
-    if (!processThread.isReady()) {
-        spdlog::error("Cannot create process thread");
-        return 2;
-    }
-
-    // mode de test
-    if (config.testMode) {
-        while (true) {
-            this_thread::sleep_for(chrono::seconds (2));
-            processThread.displayPhoto();
-        }
-    }
+    processThread.setIdle();
 
     // boucle de commande
     bool stop = false, waitConnection = true;
@@ -153,20 +157,7 @@ int main(int argc, char **argv) {
             result = processThread.setIdle();
 
         } else if (query.action == ACTION_ETALONNAGE) {
-            if (query.datas["ecueil"] == nullptr || query.datas["ecueil"].size() != 2) {
-                result.status = RESPONSE_ERROR;
-                result.errorMessage = "Invalid points";
-            } else {
-                config.ecueil = arig_utils::json2points(query.datas["ecueil"]);
-
-                if (query.datas["bouees"] != nullptr) {
-                    config.bouees = arig_utils::json2points(query.datas["bouees"]);
-                } else {
-                    config.bouees.clear();
-                }
-
-                result = processThread.startEtalonnage();
-            }
+            result = processThread.startEtalonnage();
 
         } else if (query.action == ACTION_DETECTION) {
             result = processThread.startDetection();

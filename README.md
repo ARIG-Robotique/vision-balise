@@ -54,17 +54,21 @@ $ sudo modprobe bcm2835-v4l2
 * Réponse
 ```json
 {
-    "status": "OK",
-    "action": "STATUS",
-    "datas": {
-        "cameraReady": true,
-        "etalonnageDone": true,
-        "detection": {
-            "direction": "UP",
-            "ecueil": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
-            "bouees": ["PRESENT", "ABSENT"]
-        }
+  "status": "OK",
+  "action": "STATUS",
+  "datas": {
+    "etalonnageDone": true,
+    "detection": {
+      "girouette": "UP",
+      "ecueilEquipe": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
+      "ecueilAdverse": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
+      "bouees": ["PRESENT", "ABSENT", "6 more ..."],
+      "hautFond": [
+        ["RED", 1200, 800],
+        ["GREEN", 1500, 850]
+      ]
     }
+  }
 }
 ```
 
@@ -75,44 +79,17 @@ Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
 
 * Query
 ```json
-{
-    "action": "ETALONNAGE",
-    "datas": {
-        "ecueil": [
-            [500, 500],
-            [500, 500]
-        ],
-        "bouees": [
-            [500, 500],
-            [500, 500]
-        ]
-    }
-}
+{"action": "ETALONNAGE"}
 ```
-
-`ecueil` est obligatoire et doit contenir deux points de gauche (vert) à droite (rouge).  
-`bouees` est optionnel.  
-Les points sont attendus dans la résolution d'origine (2592 x 1944).
 
 * Réponse
 ```json
 {
-    "status": "OK",
-    "action": "ETALONNAGE",
-    "datas": {
-         "ecueil": [
-             [60, 20, 50],
-             [60, 20, 50]
-         ],
-         "bouees": [
-             [60, 20, 50],
-             [60, 20, 50]
-         ]
-    }
+  "status": "OK",
+  "action": "ETALONNAGE",
+  "datas": "......base64....."
 }
 ```
-
-Les couleurs sont en HSV (H sur 0-179, S et V sur 0-255).
 
 ### Lancer la détection
 

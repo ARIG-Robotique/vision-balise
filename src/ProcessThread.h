@@ -33,7 +33,8 @@ public:
 
     JsonResult exit();
 
-    void displayPhoto();
+    Mat& getImgOrig();
+    bool takePhoto();
 
 private:
     void * process();
@@ -43,8 +44,6 @@ private:
 
     void processIdle();
     void processDetection();
-
-    bool takePhoto(const string &name);
 };
 
 
