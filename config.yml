@@ -6,7 +6,7 @@ cameraIndex: 0
 # résolution des photos brutes
 cameraResolution: [ 1280, 960 ]
 
-# la camera est une fishete (> 160°)
+# la camera est une fisheye (> 160°)
 fisheye: 1
 
 # procède à une conversion RGB -> BGR après lecture depuis la caméra
@@ -16,7 +16,7 @@ swapRgb: 0
 undistort: 1
 
 # largeur des sondes de couleur en pixels
-probeSize: 20
+probeSize: 15
 
 # Seuil de détection de couleurs
 colorThreshold: 8

@@ -12,7 +12,7 @@ void show(Mat &mat, bool ok) {
     }
 }
 
-void runTest(Mat &source, const Config* config) {
+void runTest(Mat &source, const Config *config) {
     bool debugAll = false;
 
     show(source, debugAll);
@@ -27,12 +27,12 @@ void runTest(Mat &source, const Config* config) {
 
     // detection marker
     vector<int> markerIds;
-    vector <vector<Point2f>> markerCorners;
-    Ptr <aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+    vector<vector<Point2f>> markerCorners;
+    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
     aruco::detectMarkers(undistorted, dictionary, markerCorners, markerIds);
     aruco::drawDetectedMarkers(work, markerCorners, markerIds);
 
-    vector <Point2f> marker42;
+    vector<Point2f> marker42;
     for (unsigned long i = 0; i < markerIds.size(); i++) {
         if (markerIds.at(i) == 42) {
             marker42 = markerCorners.at(i);
@@ -98,35 +98,43 @@ void runTest(Mat &source, const Config* config) {
     Mat imageHsv, imageThreshold;
     cvtColor(undistorted, imageHsv, COLOR_BGR2HSV);
 
-    // TODO if red + 10 > 180 besoin de deux ranges
     // H +- 10
     // S +- 75
     // V +- 100
-    vector <Scalar> redRange = {
-            Scalar(red[0] - 10, red[1] - 75, red[2] - 100),
-            Scalar(min(red[0] + 10, 180.0), min(red[1] + 75, 255.0), max(red[2] + 100, 255.0)),
+    auto hMin = red[0] - 10;
+    if (hMin < 0) {
+        hMin += 180;
+    }
+    auto hMax = red[0] + 10;
+    if (hMax > 180) {
+        hMax -= 180;
+    }
+
+    vector<Scalar> redRange = {
+            Scalar(hMin, max(red[1] - 75, 0.0), max(red[2] - 100, 0.0)),
+            Scalar(hMax, min(red[1] + 75, 255.0), min(red[2] + 100, 255.0)),
     };
 
     // H +- 10
-    // S +- 50
+    // S +- 75
     // V +- 50
-    vector <Scalar> greenRange = {
-            Scalar(green[0] - 10, green[1] - 50, green[2] - 50),
-            Scalar(green[0] + 10, green[1] + 50, green[2] + 50)
+    vector<Scalar> greenRange = {
+            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 50, 0.0)),
+            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 50, 255.0))
     };
 
     // RED
-    inRange(imageHsv, redRange.at(0), redRange.at(1), imageThreshold);
+    arig_utils::hsvInRange(imageHsv, redRange, imageThreshold);
     erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
     dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
 
     show(imageThreshold, debugAll);
 
-    vector <vector<Point>> contoursRed;
+    vector<vector<Point>> contoursRed;
     findContours(imageThreshold, contoursRed, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
-    vector <Point> bouee8; // blob rouge de min Y
-    vector <Point> bouee12; // blob rouge de max X
+    vector<Point> bouee8; // blob rouge de min Y
+    vector<Point> bouee12; // blob rouge de max X
     double minY = config->cameraResolution.width;
     double maxX = 0;
 
@@ -160,12 +168,12 @@ void runTest(Mat &source, const Config* config) {
 
     show(work, debugAll);
 
-    vector <Point> bouee8PtX = arig_utils::pointsOfMaxX(bouee8);
-    vector <Point> bouee8PtY = arig_utils::pointsOfMaxY(bouee8);
+    vector<Point> bouee8PtX = arig_utils::pointsOfMaxX(bouee8);
+    vector<Point> bouee8PtY = arig_utils::pointsOfMaxY(bouee8);
     Point2f bouee8Pt(arig_utils::averageX(bouee8PtY), arig_utils::averageY(bouee8PtX));
 
-    vector <Point> bouee12PtX = arig_utils::pointsOfMinX(bouee12);
-    vector <Point> bouee12PtY = arig_utils::pointsOfMaxY(bouee12);
+    vector<Point> bouee12PtX = arig_utils::pointsOfMinX(bouee12);
+    vector<Point> bouee12PtY = arig_utils::pointsOfMaxY(bouee12);
     Point2f bouee12Pt(arig_utils::averageX(bouee12PtY), arig_utils::averageY(bouee12PtX));
 
     spdlog::debug("bouee8 {}", bouee8Pt);
@@ -184,11 +192,11 @@ void runTest(Mat &source, const Config* config) {
 
     show(imageThreshold, debugAll);
 
-    vector <vector<Point>> contoursGreen;
+    vector<vector<Point>> contoursGreen;
     findContours(imageThreshold, contoursGreen, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
-    vector <Point> bouee9; // blob vert de min Y
-    vector <Point> bouee5; // blob vert de min X
+    vector<Point> bouee9; // blob vert de min Y
+    vector<Point> bouee5; // blob vert de min X
     minY = config->cameraResolution.width;
     double minX = config->cameraResolution.height;
 
@@ -222,12 +230,12 @@ void runTest(Mat &source, const Config* config) {
 
     show(work, debugAll);
 
-    vector <Point> bouee9PtX = arig_utils::pointsOfMinX(bouee9);
-    vector <Point> bouee9PtY = arig_utils::pointsOfMaxY(bouee9);
+    vector<Point> bouee9PtX = arig_utils::pointsOfMinX(bouee9);
+    vector<Point> bouee9PtY = arig_utils::pointsOfMaxY(bouee9);
     Point2f bouee9Pt(arig_utils::averageX(bouee9PtY), arig_utils::averageY(bouee9PtX));
 
-    vector <Point> bouee5PtX = arig_utils::pointsOfMaxX(bouee5);
-    vector <Point> bouee5PtY = arig_utils::pointsOfMaxY(bouee5);
+    vector<Point> bouee5PtX = arig_utils::pointsOfMaxX(bouee5);
+    vector<Point> bouee5PtY = arig_utils::pointsOfMaxY(bouee5);
     Point2f bouee5Pt(arig_utils::averageX(bouee5PtY), arig_utils::averageY(bouee5PtX));
 
     spdlog::debug("bouee9 {}", bouee9Pt);
@@ -285,7 +293,7 @@ void runTest(Mat &source, const Config* config) {
 
 
     // LECTURE GIROUTETTE
-    Rect probeGir = arig_utils::getProbe(Point(1500/2.0, (2000-20)/2.0), 20);
+    Rect probeGir = arig_utils::getProbe(Point(1500 / 2.0, (2000 - 20) / 2.0), 20);
     auto colorGir = arig_utils::getAverageColor(projected, probeGir);
     auto valueGir = arig_utils::ScalarBGR2HSV(colorGir)[2];
 
@@ -298,16 +306,16 @@ void runTest(Mat &source, const Config* config) {
         resGir = DIR_UNKNOWN;
     }
 
-    rectangle(work, probeGir, Scalar(255,0,0),1);
+    rectangle(work, probeGir, Scalar(255, 0, 0), 1);
     putText(work, resGir, probeGir.tl(), 0, 0.5, Scalar(255, 255, 255));
-    spdlog::debug("Girouette {} {}", valueGir, resGir);
+    spdlog::debug("Girouette {}", resGir);
 
     show(work, debugAll);
 
 
     // LECTURE ECUEIL
     // equipe
-    vector <Rect> probes;
+    vector<Rect> probes;
     for (auto i = 0; i < 5; i++) {
         auto x = side == TEAM_BLEU ? (1000 - i * 75) : (2000 + i * 75);
         auto y = -67;
@@ -317,7 +325,7 @@ void runTest(Mat &source, const Config* config) {
                 arig_utils::getProbe(Point2f((3000 - x) / 2.0 + offsetX, (2000 - y) / 2.0 + offsetY), 15));
     }
 
-    vector <string> ecueil;
+    vector<string> ecueil;
     for (auto &probe : probes) {
         auto color = arig_utils::getAverageColor(projected, probe);
         auto hue = arig_utils::ScalarBGR2HSV(color)[0];
@@ -380,7 +388,7 @@ void runTest(Mat &source, const Config* config) {
 
 
     // PRESENCE BOUEE
-    vector <pair<Scalar, Point2f>> bouees = {
+    vector<pair<Scalar, Point2f>> bouees = {
             {red,   Point2f((3000 - 670) / 2.0, (2000 - 100) / 2.0)},
             {red,   Point2f((3000 - 1100) / 2.0, (2000 - 800) / 2.0)},
             {red,   Point2f((3000 - 1730) / 2.0, (2000 - 1200) / 2.0)},
@@ -415,7 +423,8 @@ void runTest(Mat &source, const Config* config) {
     // ZONE DE DESTRUCTION !!!
     cvtColor(projected, imageHsv, COLOR_BGR2HSV);
 
-    inRange(imageHsv, redRange.at(0), redRange.at(1), imageThreshold);
+    // rouge
+    arig_utils::hsvInRange(imageHsv, redRange, imageThreshold);
     erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
     dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
 
@@ -442,31 +451,49 @@ void runTest(Mat &source, const Config* config) {
         auto ptY = arig_utils::pointsOfMaxY(contoursRed.at(i));
 
         auto pt = Point2f(arig_utils::averageX(ptY), arig_utils::averageY(ptX));
-        auto probe = arig_utils::getProbe(pt, 15);
-        auto color = arig_utils::getAverageColor(projected, probe);
-        auto hue = arig_utils::ScalarBGR2HSV(color)[0];
-
-        auto dRed = abs(hue - red[0]);
-        dRed = min(dRed, 180 - dRed);
-        auto dGreen = abs(hue - green[0]);
-        dGreen = min(dGreen, 180 - dGreen);
-
-        string res;
-        if (dRed < config->colorThreshold) {
-            res = COLOR_RED;
-        } else if (dGreen < config->colorThreshold) {
-            res = COLOR_GREEN;
-        } else {
-            res = COLOR_UNKNOWN;
-        }
 
         drawContours(work, contoursRed, i, Scalar(0, 0, 0), 2);
-        rectangle(work, probe, Scalar(255, 255, 255), 1);
-        String txt = to_string((int) (3000 - pt.x * 2)) + "x" + to_string((int) (pt.y * 2)) + " : " + res;
-        putText(work, txt, probe.tl(), 0, 0.5, Scalar(255, 255, 255));
+        circle(work, pt, 20, arig_utils::RED, 1);
+        String txt = to_string((int) (3000 - pt.x * 2)) + "x" + to_string((int) (pt.y * 2)) + " : RED";
+        putText(work, txt, pt, 0, 0.5, Scalar(255, 255, 255));
     }
 
-    show(work, debugAll);
+    // vert
+    inRange(imageHsv, greenRange.at(0), greenRange.at(1), imageThreshold);
+    erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+    dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
+
+    contoursGreen.clear();
+    findContours(imageThreshold, contoursGreen, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+    for (auto i = 0; i < contoursGreen.size(); i++) {
+        Moments moment = moments(contoursGreen.at(i));
+        double area = moment.m00;
+
+        if (area < 100 || area > 3000) {
+            continue;
+        }
+
+        double x = moment.m10 / area;
+        double y = moment.m01 / area;
+
+        double dst = pow(750 - x, 2) + pow(1000 - y, 2);
+        if (dst > 250 * 250 || y > 1000) {
+            continue;
+        }
+
+        auto ptX = x > 750 ? arig_utils::pointsOfMinX(contoursGreen.at(i)) : arig_utils::pointsOfMaxX(contoursGreen.at(i));
+        auto ptY = arig_utils::pointsOfMaxY(contoursGreen.at(i));
+
+        auto pt = Point2f(arig_utils::averageX(ptY), arig_utils::averageY(ptX));
+
+        drawContours(work, contoursGreen, i, Scalar(0, 0, 0), 2);
+        circle(work, pt, 20, arig_utils::GREEN, 1);
+        String txt = to_string((int) (3000 - pt.x * 2)) + "x" + to_string((int) (pt.y * 2)) + " : GREEN";
+        putText(work, txt, pt, 0, 0.5, Scalar(255, 255, 255));
+    }
+
+    show(work, true);
 }
 
 #endif //VISION_BALISE_TEST_H

@@ -81,7 +81,7 @@ JsonResult ProcessThread::setIdle() {
 /**
  * POUR TESTS UNIQUEMENT pas thread safe
  */
-Mat& ProcessThread::getImgOrig() {
+Mat &ProcessThread::getImgOrig() {
     return m_imgOrig;
 }
 
@@ -204,47 +204,43 @@ void *ProcessThread::process() {
 bool ProcessThread::takePhoto() {
     auto start = arig_utils::startTiming();
 
+    Mat source;
     if (!m_config->mockPhoto.empty()) {
-        pthread_mutex_lock(&m_datasMutex);
-        m_imgOrig = imread(m_config->mockPhoto, CV_LOAD_IMAGE_COLOR);
-        pthread_mutex_unlock(&m_datasMutex);
+        source = imread(m_config->mockPhoto, CV_LOAD_IMAGE_COLOR);
 
-        if (!m_imgOrig.data) {
+        if (!source.data) {
             spdlog::error("Could not open or find the mock image");
             return false;
-        } else {
-            spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
-            return true;
         }
-    }
-
-    Mat source = m_videoThread->getPhoto();
-
-    if (!source.data) {
-        spdlog::error("Could not open or find the camera");
-        return false;
     } else {
-        Mat undistorted;
-        if (m_config->undistort) {
-            remap(source, undistorted, m_config->remap1, m_config->remap2, INTER_LINEAR);
-        } else {
-            undistorted = source;
+        source = m_videoThread->getPhoto();
+
+        if (!source.data) {
+            spdlog::error("Could not open or find the camera");
+            return false;
         }
-
-        Mat final;
-        if (m_config->swapRgb) {
-            cvtColor(undistorted, final, COLOR_RGB2BGR);
-        } else {
-            final = undistorted;
-        }
-
-        pthread_mutex_lock(&m_datasMutex);
-        m_imgOrig = final;
-        pthread_mutex_unlock(&m_datasMutex);
-
-        spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
-        return true;
     }
+
+    Mat undistorted;
+    if (m_config->undistort) {
+        remap(source, undistorted, m_config->remap1, m_config->remap2, INTER_LINEAR);
+    } else {
+        undistorted = source;
+    }
+
+    Mat final;
+    if (m_config->swapRgb) {
+        cvtColor(undistorted, final, COLOR_RGB2BGR);
+    } else {
+        final = undistorted;
+    }
+
+    pthread_mutex_lock(&m_datasMutex);
+    m_imgOrig = final;
+    pthread_mutex_unlock(&m_datasMutex);
+
+    spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
+    return true;
 }
 
 /**
@@ -264,7 +260,7 @@ void ProcessThread::processIdle() {
         }
 
         if (takePhoto()) {
-            if (m_config->debug || i % 10 == 0) {
+            if (m_config->mockPhoto.empty() && (m_config->debug || i % 10 == 0)) {
                 imwrite(m_config->outputPrefix + "idle-" + to_string(i) + ".jpg", m_imgOrig);
             }
         }

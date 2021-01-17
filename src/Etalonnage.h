@@ -21,7 +21,9 @@ private:
 
     bool detectBouees(const Mat &imageHsv, Mat &output,
                       const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
-                      Point boueeTop, Point boueeSide);
+                      Point &boueeTop, Point &boueeSide);
+
+    void debugResult(const Mat &source);
 };
 
 

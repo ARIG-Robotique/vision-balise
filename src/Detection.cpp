@@ -7,6 +7,7 @@ Detection::Detection(Config *config) {
     for (auto i = 0; i < 8; i++) {
         boueesBuffer.emplace_back(vector<int>(config->detectionBuffer, 0));
     }
+    girouetteBuffer = vector<int>(config->detectionBuffer, 0);
 }
 
 json Detection::run(const Mat &source, int index) {
@@ -42,11 +43,6 @@ json Detection::run(const Mat &source, int index) {
     vector<string> bouees;
     if (controleBouees(imageHsv, output, bouees)) {
         r["bouees"] = arig_utils::strings2json(bouees);
-
-        bufferIndex++;
-        if (bufferIndex == config->detectionBuffer) {
-            bufferIndex = 0;
-        }
     }
 
     // DETECTION BOUEES
@@ -63,6 +59,11 @@ json Detection::run(const Mat &source, int index) {
         }
 
         r["hautFond"] = rHautFond;
+    }
+
+    bufferIndex++;
+    if (bufferIndex == config->detectionBuffer) {
+        bufferIndex = 0;
     }
 
     if (!output.empty()) {
@@ -85,10 +86,23 @@ bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string
     );
     auto color = arig_utils::getAverageColor(imageHsv, probe);
 
-    string res;
     if (color[2] > 150) {
-        res = DIR_DOWN;
+        girouetteBuffer[bufferIndex] = 1;
     } else if (color[2] < 100) {
+        girouetteBuffer[bufferIndex] = -1;
+    } else {
+        girouetteBuffer[bufferIndex] = 0;
+    }
+
+    auto val = 0.0;
+    for (auto i = 0; i < config->detectionBuffer; i++) {
+        val += girouetteBuffer[i];
+    }
+
+    string res;
+    if (val >= config->detectionValidLimit) {
+        res = DIR_DOWN;
+    } else if (val <= -config->detectionValidLimit) {
         res = DIR_UP;
     } else {
         res = DIR_UNKNOWN;
@@ -99,7 +113,7 @@ bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string
         putText(output, res, probe.tl(), 0, 0.5, arig_utils::WHITE);
     }
 
-    return false;
+    return true;
 }
 
 /**

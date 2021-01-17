@@ -11,6 +11,7 @@ private:
 
     short bufferIndex = 0;
     vector<vector<int>> boueesBuffer;
+    vector<int> girouetteBuffer;
 
 public:
     explicit Detection(Config* config);

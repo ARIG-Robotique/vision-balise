@@ -210,7 +210,7 @@ namespace arig_utils {
             Mat out1, out2;
             inRange(imageHsv, range[0], Scalar(180, range[1][1], range[1][2]), out1);
             inRange(imageHsv, Scalar(0, range[0][1], range[0][2]), range[1], out2);
-            output.setTo(out1 | out2);
+            output = out1 | out2;
         }
     }
 }

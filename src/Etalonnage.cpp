@@ -59,26 +59,27 @@ JsonResult Etalonnage::run(const Mat &source) {
     spdlog::debug("Bouee 9 : {}", bouee9);
     spdlog::debug("Bouee 5 : {}", bouee5);
 
-    drawContours(output, {detectionZone}, 0, arig_utils::BLUE);
-    circle(output, bouee8, 20, arig_utils::RED, 2);
-    circle(output, bouee12, 20, arig_utils::RED, 2);
-    circle(output, bouee9, 20, arig_utils::GREEN, 2);
-    circle(output, bouee5, 20, arig_utils::GREEN, 2);
+    polylines(output, detectionZone, true, arig_utils::BLUE, 1);
+    circle(output, bouee8, 20, arig_utils::RED, 1);
+    circle(output, bouee12, 20, arig_utils::RED, 1);
+    circle(output, bouee9, 20, arig_utils::GREEN, 1);
+    circle(output, bouee5, 20, arig_utils::GREEN, 1);
 
 
     // CALCUL PERSPECTIVE
     Point2f ptsImages[] = {bouee9, bouee8, bouee5, bouee12};
     Point2f ptsProj[] = {
-            Point2f((3000 - 1270) / 2.0, (2000 - 1200) / 2.0),
-            Point2f((3000 - 1730) / 2.0, (2000 - 1200) / 2.0),
-            Point2f((3000 - 2330) / 2.0, (2000 - 100) / 2.0),
-            Point2f((3000 - 670) / 2.0, (2000 - 100) / 2.0)
+            arig_utils::tablePtToImagePt(Point(1270, 1200)),
+            arig_utils::tablePtToImagePt(Point(1730, 1200)),
+            arig_utils::tablePtToImagePt(Point(2330, 100)),
+            arig_utils::tablePtToImagePt(Point(670, 100)),
     };
 
     config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
     config->perspectiveSize = Size(1500, 1100);
 
     imwrite(config->outputPrefix + "etallonage.jpg", output);
+    debugResult(source);
 
     r.status = RESPONSE_OK;
     r.datas = arig_utils::matToBase64(output);
@@ -88,6 +89,49 @@ JsonResult Etalonnage::run(const Mat &source) {
     spdlog::debug("Etalonnage en {}ms", arig_utils::ellapsedTime(start));
 
     return r;
+}
+
+/**
+ * Applique la correction de perspective et écrit un fichier avec des élements de debug
+ */
+void Etalonnage::debugResult(const Mat &source) {
+    Mat projected;
+    warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
+
+    Point boueeRouge[] = {
+            arig_utils::tablePtToImagePt(Point(670, 100)),
+            arig_utils::tablePtToImagePt(Point(1100, 800)),
+            arig_utils::tablePtToImagePt(Point(1730, 1200)),
+            arig_utils::tablePtToImagePt(Point(2044, 400)),
+            arig_utils::tablePtToImagePt(Point(2300, -67)),
+            arig_utils::tablePtToImagePt(Point(1000, -67)),
+    };
+
+    Point boueeVerte[] = {
+            arig_utils::tablePtToImagePt(Point(956, 400)),
+            arig_utils::tablePtToImagePt(Point(1270, 1200)),
+            arig_utils::tablePtToImagePt(Point(1900, 800)),
+            arig_utils::tablePtToImagePt(Point(2330, 100)),
+            arig_utils::tablePtToImagePt(Point(2000, -67)),
+            arig_utils::tablePtToImagePt(Point(700, -67)),
+    };
+
+    for (auto &bouee : boueeRouge) {
+        circle(projected, bouee, 20, arig_utils::RED, 1);
+    }
+    for (auto &bouee : boueeVerte) {
+        circle(projected, bouee, 20, arig_utils::GREEN, 1);
+    }
+
+    circle(projected, Point(750, 1000), 250, arig_utils::BLACK, 1);
+
+    auto probe = arig_utils::getProbe(
+            arig_utils::tablePtToImagePt(Point(1500, 20)),
+            config->probeSize
+    );
+    rectangle(projected, probe, arig_utils::BLUE, 1);
+
+    imwrite(config->outputPrefix + "etallonage-result.jpg", projected);
 }
 
 /**
@@ -143,7 +187,7 @@ bool Etalonnage::calibCouleurs(const Mat &source, Mat &output, const Point &mark
  */
 bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
                               const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
-                              Point boueeTop, Point boueeSide) {
+                              Point &boueeTop, Point &boueeSide) {
     Mat imageThreshold;
     arig_utils::hsvInRange(imageHsv, colorRange, imageThreshold);
     erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
