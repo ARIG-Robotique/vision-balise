@@ -55,7 +55,10 @@ json Detection::run(const Mat &source, int index) {
         json rHautFond;
 
         for (auto &tmp : hautFond) {
-            rHautFond.emplace_back(json({tmp.first, tmp.second.x, tmp.second.y}));
+            json tmp2;
+            tmp2["col"] = tmp.first;
+            tmp2["pos"] = json({tmp.second.x, tmp.second.y});
+            rHautFond.emplace_back(tmp2);
         }
 
         r["hautFond"] = rHautFond;

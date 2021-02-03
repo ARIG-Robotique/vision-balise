@@ -64,8 +64,8 @@ $ sudo modprobe bcm2835-v4l2
       "ecueilAdverse": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
       "bouees": ["PRESENT", "ABSENT", "6 more ..."],
       "hautFond": [
-        ["RED", 1200, 800],
-        ["GREEN", 1500, 850]
+        {"col": "RED", "pos": [1200, 800]},
+        {"col": "GREEN", "pos": [1500, 850]}
       ]
     }
   }
