@@ -46,12 +46,12 @@ struct JsonResult {
     string status;
     string action;
     string errorMessage;
-    json datas;
+    json data;
 };
 
 struct JsonQuery {
     string action;
-    json datas;
+    json data;
 };
 
 #endif //VISION_BALISE_COMMON_H

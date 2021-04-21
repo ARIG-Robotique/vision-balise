@@ -17,7 +17,7 @@ private:
     bool m_cameraReady = false;
 
     pthread_t m_thread;
-    pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t m_dataMutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t  m_readySignal = PTHREAD_COND_INITIALIZER;
 
 public:
@@ -39,9 +39,9 @@ public:
         clock_gettime(CLOCK_REALTIME, &ts);
         ts.tv_sec += 5;
 
-        pthread_mutex_lock(&m_datasMutex);
-        pthread_cond_timedwait(&m_readySignal, &m_datasMutex, &ts);
-        pthread_mutex_unlock(&m_datasMutex);
+        pthread_mutex_lock(&m_dataMutex);
+        pthread_cond_timedwait(&m_readySignal, &m_dataMutex, &ts);
+        pthread_mutex_unlock(&m_dataMutex);
 
         if (!m_cameraReady) {
             spdlog::error("Cannot access camera within 5 seconds)");
@@ -66,12 +66,12 @@ private:
     void * process() {
         m_video = new VideoCapture(m_config->cameraIndex);
 
-        pthread_mutex_lock(&m_datasMutex);
+        pthread_mutex_lock(&m_dataMutex);
 
         if (!m_video->isOpened()) {
             spdlog::error("Cannot open camera");
             pthread_cond_signal(&m_readySignal);
-            pthread_mutex_unlock(&m_datasMutex);
+            pthread_mutex_unlock(&m_dataMutex);
             pthread_exit(nullptr);
         }
 
@@ -89,7 +89,7 @@ private:
             if (first && src.data) {
                 m_cameraReady = true;
                 pthread_cond_signal(&m_readySignal);
-                pthread_mutex_unlock(&m_datasMutex);
+                pthread_mutex_unlock(&m_dataMutex);
                 first = false;
             }
         }

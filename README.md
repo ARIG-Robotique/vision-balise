@@ -40,7 +40,7 @@ $ sudo modprobe bcm2835-v4l2
 {
   "status": "OK",
   "action": "PHOTO",
-  "datas": "......base64....."
+  "data": "......base64....."
 }
 ```
 
@@ -56,7 +56,7 @@ $ sudo modprobe bcm2835-v4l2
 {
   "status": "OK",
   "action": "STATUS",
-  "datas": {
+  "data": {
     "etalonnageDone": true,
     "detection": {
       "girouette": "UP",
@@ -87,7 +87,7 @@ Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
 {
   "status": "OK",
   "action": "ETALONNAGE",
-  "datas": "......base64....."
+  "data": "......base64....."
 }
 ```
 

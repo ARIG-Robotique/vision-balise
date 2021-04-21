@@ -35,16 +35,16 @@ bool ProcessThread::isReady() {
  * @return
  */
 JsonResult ProcessThread::getStatus() {
-    json datas;
+    json data;
 
-    pthread_mutex_lock(&m_datasMutex);
-    datas["etalonnageDone"] = m_config->etalonnageDone;
-    datas["detection"] = m_detectionResult;
-    pthread_mutex_unlock(&m_datasMutex);
+    pthread_mutex_lock(&m_dataMutex);
+    data["etalonnageDone"] = m_config->etalonnageDone;
+    data["detection"] = m_detectionResult;
+    pthread_mutex_unlock(&m_dataMutex);
 
     JsonResult r;
     r.status = RESPONSE_OK;
-    r.datas = datas;
+    r.data = data;
     return r;
 }
 
@@ -53,22 +53,22 @@ JsonResult ProcessThread::getStatus() {
  * @return
  */
 JsonResult ProcessThread::getPhoto() {
-    json datas;
+    json data;
 
-    pthread_mutex_lock(&m_datasMutex);
+    pthread_mutex_lock(&m_dataMutex);
     if (!m_imgOrig.empty()) {
-        datas = arig_utils::matToBase64(m_imgOrig);
+        data = arig_utils::matToBase64(m_imgOrig);
     }
-    pthread_mutex_unlock(&m_datasMutex);
+    pthread_mutex_unlock(&m_dataMutex);
 
     JsonResult r;
 
-    if (datas.empty()) {
+    if (data.empty()) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Pas d'image";
     } else {
         r.status = RESPONSE_OK;
-        r.datas = datas;
+        r.data = data;
     }
 
     return r;
@@ -235,9 +235,9 @@ bool ProcessThread::takePhoto() {
         final = undistorted;
     }
 
-    pthread_mutex_lock(&m_datasMutex);
+    pthread_mutex_lock(&m_dataMutex);
     m_imgOrig = final;
-    pthread_mutex_unlock(&m_datasMutex);
+    pthread_mutex_unlock(&m_dataMutex);
 
     spdlog::info("Photo prise en {}ms", arig_utils::ellapsedTime(start));
     return true;
@@ -292,9 +292,9 @@ void ProcessThread::processDetection() {
         if (takePhoto()) {
             json r = detection.run(m_imgOrig, i);
 
-            pthread_mutex_lock(&m_datasMutex);
+            pthread_mutex_lock(&m_dataMutex);
             m_detectionResult = r;
-            pthread_mutex_unlock(&m_datasMutex);
+            pthread_mutex_unlock(&m_dataMutex);
         }
 
         i++;

@@ -12,7 +12,7 @@ private:
     VideoThread* m_videoThread;
 
     pthread_t m_thread;
-    pthread_mutex_t m_datasMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t m_dataMutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t m_actionMutex = PTHREAD_MUTEX_INITIALIZER;
 
     bool m_ready = false;

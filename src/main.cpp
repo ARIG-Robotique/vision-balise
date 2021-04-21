@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         JsonResult result;
         if (query.action == ACTION_ECHO) {
             result.status = RESPONSE_OK;
-            result.datas = query.datas;
+            result.data = query.data;
 
         } else if (query.action == ACTION_EXIT) {
             spdlog::info("Demande d'arret du programe");

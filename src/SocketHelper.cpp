@@ -182,7 +182,7 @@ JsonQuery SocketHelper::getQuery(void) {
             json jsonValue = json::parse(buffer);
             spdlog::trace("Requête client : {}", jsonValue.dump(2));
             q.action = jsonValue["action"];
-            q.datas = jsonValue["datas"];
+            q.data = jsonValue["data"];
         } catch (const exception & e) {
             spdlog::error("Erreur de lecture du JSON : {}", e.what());
             q.action = DATA_UNPARSABLE;
@@ -200,7 +200,7 @@ void SocketHelper::sendResponse(JsonResult response) {
     r["status"] = response.status;
     r["action"] = response.action;
     r["errorMessage"] = response.errorMessage;
-    r["datas"] = response.datas;
+    r["data"] = response.data;
 
     spdlog::trace("Réponse client : {}", r.dump(2));
 

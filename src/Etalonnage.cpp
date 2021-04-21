@@ -82,7 +82,7 @@ JsonResult Etalonnage::run(const Mat &source) {
     debugResult(source);
 
     r.status = RESPONSE_OK;
-    r.datas = arig_utils::matToBase64(output);
+    r.data = arig_utils::matToBase64(output);
 
     config->etalonnageDone = true;
 
