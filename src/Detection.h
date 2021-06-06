@@ -9,13 +9,14 @@ class Detection {
 private:
     Config* config;
 
+    int index = 0;
     short bufferIndex = 0;
     vector<vector<int>> boueesBuffer;
     vector<int> girouetteBuffer;
 
 public:
     explicit Detection(Config* config);
-    json run(const Mat &source, int index);
+    json run(const Mat &source);
 
 private:
     bool lectureGirouette(const Mat &imageHsv, Mat &output, vector<string> &girouette);

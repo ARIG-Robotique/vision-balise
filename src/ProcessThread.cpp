@@ -277,7 +277,6 @@ void ProcessThread::processIdle() {
 void ProcessThread::processDetection() {
     Detection detection(m_config);
 
-    int i = 0;
     string action;
 
     while (true) {
@@ -290,14 +289,12 @@ void ProcessThread::processDetection() {
         }
 
         if (takePhoto()) {
-            json r = detection.run(m_imgOrig, i);
+            json r = detection.run(m_imgOrig);
 
             pthread_mutex_lock(&m_dataMutex);
             m_detectionResult = r;
             pthread_mutex_unlock(&m_dataMutex);
         }
-
-        i++;
 
         this_thread::sleep_for(chrono::milliseconds(m_config->detectionDelay));
     }

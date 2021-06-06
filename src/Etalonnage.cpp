@@ -7,7 +7,7 @@ Etalonnage::Etalonnage(Config *config) {
 
 JsonResult Etalonnage::run(const Mat &source) {
     auto start = arig_utils::startTiming();
-    spdlog::info("ETALONNAGE");
+    spdlog::info("ETALONNAGE {}", ++index);
 
     Mat output = source.clone();
     JsonResult r;
@@ -78,11 +78,12 @@ JsonResult Etalonnage::run(const Mat &source) {
     config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
     config->perspectiveSize = Size(1500, 1100);
 
-    imwrite(config->outputPrefix + "etallonage.jpg", output);
-    debugResult(source);
+    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", output);
+
+    Mat result = debugResult(source);
 
     r.status = RESPONSE_OK;
-    r.data = arig_utils::matToBase64(output);
+    r.data = arig_utils::matToBase64(result);
 
     config->etalonnageDone = true;
 
@@ -94,9 +95,9 @@ JsonResult Etalonnage::run(const Mat &source) {
 /**
  * Applique la correction de perspective et écrit un fichier avec des élements de debug
  */
-void Etalonnage::debugResult(const Mat &source) {
-    Mat projected;
-    warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
+Mat Etalonnage::debugResult(const Mat &source) {
+    Mat result;
+    warpPerspective(source, result, config->perspectiveMap, config->perspectiveSize);
 
     Point boueeRouge[] = {
             arig_utils::tablePtToImagePt(Point(670, 100)),
@@ -117,21 +118,23 @@ void Etalonnage::debugResult(const Mat &source) {
     };
 
     for (auto &bouee : boueeRouge) {
-        circle(projected, bouee, 20, arig_utils::RED, 1);
+        circle(result, bouee, 20, arig_utils::RED, 1);
     }
     for (auto &bouee : boueeVerte) {
-        circle(projected, bouee, 20, arig_utils::GREEN, 1);
+        circle(result, bouee, 20, arig_utils::GREEN, 1);
     }
 
-    circle(projected, Point(750, 1000), 250, arig_utils::BLACK, 1);
+    circle(result, Point(750, 1000), 250, arig_utils::BLACK, 1);
 
     auto probe = arig_utils::getProbe(
             arig_utils::tablePtToImagePt(Point(1500, 20)),
             config->probeSize
     );
-    rectangle(projected, probe, arig_utils::BLUE, 1);
+    rectangle(result, probe, arig_utils::BLUE, 1);
 
-    imwrite(config->outputPrefix + "etallonage-result.jpg", projected);
+    imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", result);
+
+    return result;
 }
 
 /**

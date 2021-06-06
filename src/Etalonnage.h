@@ -9,6 +9,8 @@ class Etalonnage {
 private:
     Config *config;
 
+    int index = 0;
+
 public:
     explicit Etalonnage(Config *config);
 
@@ -23,7 +25,7 @@ private:
                       const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
                       Point &boueeTop, Point &boueeSide);
 
-    void debugResult(const Mat &source);
+    Mat debugResult(const Mat &source);
 };
 
 

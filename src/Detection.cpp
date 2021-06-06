@@ -10,9 +10,9 @@ Detection::Detection(Config *config) {
     girouetteBuffer = vector<int>(config->detectionBuffer, 0);
 }
 
-json Detection::run(const Mat &source, int index) {
+json Detection::run(const Mat &source) {
     auto start = arig_utils::startTiming();
-    spdlog::info("DETECTION {}", index);
+    spdlog::info("DETECTION {}", ++index);
 
     json r;
 

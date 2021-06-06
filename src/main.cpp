@@ -6,6 +6,14 @@
 #include "ProcessThread.h"
 #include "test.h"
 
+String getTimeStr() {
+    time_t now = time(nullptr);
+    tm *ptm = localtime(&now);
+    char timeBuffer[15];
+    strftime(timeBuffer, 15, "%Y%m%d%H%M%S", ptm);
+    return String(timeBuffer);
+}
+
 int main(int argc, char **argv) {
     const String keys =
             "{help | | Display help }"
@@ -29,14 +37,9 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // construit la date d'execution
-    time_t now = time(nullptr);
-    tm *ptm = localtime(&now);
-    char timeBuffer[15];
-    strftime(timeBuffer, 15, "%Y%m%d%H%M%S", ptm);
-
+    // dossier de stockage des logs/images
     const String outputDir = parser.get<string>("output-dir");
-    const String outputPrefix = outputDir + String(timeBuffer) + "-";
+    const String outputPrefix = outputDir + getTimeStr() + "-";
 
     mkdir(outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
