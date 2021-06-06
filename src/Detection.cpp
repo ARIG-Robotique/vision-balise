@@ -35,6 +35,7 @@ json Detection::run(const Mat &source, int index) {
     if (lectureEcueil(imageHsv, output, false, ecueilEquipe) &&
         lectureEcueil(imageHsv, output, true, ecueilAdverse)) {
         // TODO nettoyage des données erronées à cause de la perspective
+        // TODO ne retourner que l'ecueilEquipe après nettoyage
         r["ecueilEquipe"] = arig_utils::strings2json(ecueilEquipe);
         r["ecueilAdverse"] = arig_utils::strings2json(ecueilAdverse);
     }
@@ -110,6 +111,7 @@ bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string
     } else {
         res = DIR_UNKNOWN;
     }
+    girouette.emplace_back(res);
 
     if (!output.empty()) {
         rectangle(output, probe, arig_utils::BLUE, 1);

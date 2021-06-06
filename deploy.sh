@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ROBOT_NAME=sauron
-ROBOT_HOST=${1:-$(ROBOT_NAME)}
+ROBOT_HOST=${1:-${ROBOT_NAME}}
 INSTALL_DIR=/home/pi/$ROBOT_NAME
 
 echo "Compilation ..."
