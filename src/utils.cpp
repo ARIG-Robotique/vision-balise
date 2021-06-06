@@ -213,4 +213,14 @@ namespace arig_utils {
             output = out1 | out2;
         }
     }
+
+    Scalar meanBGR(const Scalar &scalar1, const Scalar &scalar2) {
+        return Scalar((scalar1[0] + scalar2[0]) / 2.0, (scalar1[1] + scalar2[1]) / 2.0,
+                      (scalar1[2] + scalar2[2]) / 2.0);
+    }
+
+    double deltaHue(const Scalar &scalar1, const Scalar &scalar2) {
+        auto d = abs(scalar1[0] - scalar2[0]);
+        return min(d, 180 - d);
+    }
 }

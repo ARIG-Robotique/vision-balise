@@ -37,6 +37,7 @@ public:
     bool etalonnageDone = false;
     String team = TEAM_UNKNOWN;
     Scalar red, green;
+    Scalar redEcueil, greenEcueil;
     Mat perspectiveMap;
     Size perspectiveSize;
 

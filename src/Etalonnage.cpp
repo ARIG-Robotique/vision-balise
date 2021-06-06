@@ -1,4 +1,5 @@
 #include "Etalonnage.h"
+#include "Detection.h"
 #include "utils.h"
 
 Etalonnage::Etalonnage(Config *config) {
@@ -9,12 +10,12 @@ JsonResult Etalonnage::run(const Mat &source) {
     auto start = arig_utils::startTiming();
     spdlog::info("ETALONNAGE {}", ++index);
 
-    Mat output = source.clone();
+    Mat output1 = source.clone();
     JsonResult r;
 
     // DETECTION DU MARKER
     Point markerCenter;
-    if (!detectMarker(source, output, markerCenter)) {
+    if (!detectMarker(source, output1, markerCenter)) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de trouver le marqueur";
         return r;
@@ -27,7 +28,7 @@ JsonResult Etalonnage::run(const Mat &source) {
 
 
     // CALIBRATION DES COULEURS
-    if (!calibCouleurs(source, output, markerCenter)) {
+    if (!calibCouleurs(source, output1, markerCenter)) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de calibrer les couleurs";
         return r;
@@ -47,8 +48,8 @@ JsonResult Etalonnage::run(const Mat &source) {
     cvtColor(source, imageHsv, COLOR_BGR2HSV);
 
     Point bouee8, bouee12, bouee5, bouee9;
-    if (!detectBouees(imageHsv, output, redRange, detectionZone, false, bouee8, bouee12) ||
-        !detectBouees(imageHsv, output, greenRange, detectionZone, true, bouee9, bouee5)) {
+    if (!detectBouees(imageHsv, output1, redRange, detectionZone, false, bouee8, bouee12) ||
+        !detectBouees(imageHsv, output1, greenRange, detectionZone, true, bouee9, bouee5)) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de détecter les bouées";
         return r;
@@ -59,11 +60,13 @@ JsonResult Etalonnage::run(const Mat &source) {
     spdlog::debug("Bouee 9 : {}", bouee9);
     spdlog::debug("Bouee 5 : {}", bouee5);
 
-    polylines(output, detectionZone, true, arig_utils::BLUE, 1);
-    circle(output, bouee8, 20, arig_utils::RED, 1);
-    circle(output, bouee12, 20, arig_utils::RED, 1);
-    circle(output, bouee9, 20, arig_utils::GREEN, 1);
-    circle(output, bouee5, 20, arig_utils::GREEN, 1);
+    polylines(output1, detectionZone, true, arig_utils::BLUE, 1);
+    circle(output1, bouee8, 20, arig_utils::RED, 1);
+    circle(output1, bouee12, 20, arig_utils::RED, 1);
+    circle(output1, bouee9, 20, arig_utils::GREEN, 1);
+    circle(output1, bouee5, 20, arig_utils::GREEN, 1);
+
+    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", output1);
 
 
     // CALCUL PERSPECTIVE
@@ -78,12 +81,25 @@ JsonResult Etalonnage::run(const Mat &source) {
     config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
     config->perspectiveSize = Size(1500, 1100);
 
-    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", output);
+    Mat projected;
+    warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
 
-    Mat result = debugResult(source);
+    Mat output2 = projected.clone();
+
+    if (!calibCouleursEcueil(projected, output2)) {
+        r.status = RESPONSE_ERROR;
+        r.errorMessage = "Impossible de calibrer les couleurs de l'ecueil";
+        return r;
+    }
+
+    spdlog::debug("Rouge ecueil {}", config->redEcueil);
+    spdlog::debug("Vert ecueil {}", config->greenEcueil);
+
+    debugResult(output2);
+    imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", output2);
 
     r.status = RESPONSE_OK;
-    r.data = arig_utils::matToBase64(result);
+    r.data = arig_utils::matToBase64(output2);
 
     config->etalonnageDone = true;
 
@@ -95,10 +111,7 @@ JsonResult Etalonnage::run(const Mat &source) {
 /**
  * Applique la correction de perspective et écrit un fichier avec des élements de debug
  */
-Mat Etalonnage::debugResult(const Mat &source) {
-    Mat result;
-    warpPerspective(source, result, config->perspectiveMap, config->perspectiveSize);
-
+void Etalonnage::debugResult(Mat &output) {
     Point boueeRouge[] = {
             arig_utils::tablePtToImagePt(Point(670, 100)),
             arig_utils::tablePtToImagePt(Point(1100, 800)),
@@ -118,23 +131,19 @@ Mat Etalonnage::debugResult(const Mat &source) {
     };
 
     for (auto &bouee : boueeRouge) {
-        circle(result, bouee, 20, arig_utils::RED, 1);
+        circle(output, bouee, 20, arig_utils::RED, 1);
     }
     for (auto &bouee : boueeVerte) {
-        circle(result, bouee, 20, arig_utils::GREEN, 1);
+        circle(output, bouee, 20, arig_utils::GREEN, 1);
     }
 
-    circle(result, Point(750, 1000), 250, arig_utils::BLACK, 1);
+    circle(output, Point(750, 1000), 250, arig_utils::BLACK, 1);
 
     auto probe = arig_utils::getProbe(
             arig_utils::tablePtToImagePt(Point(1500, 20)),
             config->probeSize
     );
-    rectangle(result, probe, arig_utils::BLUE, 1);
-
-    imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", result);
-
-    return result;
+    rectangle(output, probe, arig_utils::BLUE, 1);
 }
 
 /**
@@ -181,6 +190,31 @@ bool Etalonnage::calibCouleurs(const Mat &source, Mat &output, const Point &mark
 
     config->red = arig_utils::ScalarBGR2HSV(arig_utils::getAverageColor(source, probeRed));
     config->green = arig_utils::ScalarBGR2HSV(arig_utils::getAverageColor(source, probeGreen));
+
+    return true;
+}
+
+/**
+ * Récupère les couleurs de référence rouge et vert pour les ecueils
+ */
+bool Etalonnage::calibCouleursEcueil(const Mat &source, Mat &output) {
+    auto probeGreenAdverse = arig_utils::getProbe(Detection::getEcueilPoint(config->team, true, 0), config->probeSize);
+    auto probeRedAdverse = arig_utils::getProbe(Detection::getEcueilPoint(config->team, true, 4), config->probeSize);
+    auto probeGreenEquipe = arig_utils::getProbe(Detection::getEcueilPoint(config->team, false, 4), config->probeSize);
+    auto probeRedEquipe = arig_utils::getProbe(Detection::getEcueilPoint(config->team, false, 0), config->probeSize);
+
+    rectangle(output, probeGreenAdverse.tl(), probeGreenAdverse.br(), arig_utils::WHITE);
+    rectangle(output, probeRedAdverse.tl(), probeRedAdverse.br(), arig_utils::WHITE);
+    rectangle(output, probeGreenEquipe.tl(), probeGreenEquipe.br(), arig_utils::WHITE);
+    rectangle(output, probeRedEquipe.tl(), probeRedEquipe.br(), arig_utils::WHITE);
+
+    Scalar greenAdverse = arig_utils::getAverageColor(source, probeGreenAdverse);
+    Scalar redAdverse = arig_utils::getAverageColor(source, probeRedAdverse);
+    Scalar greenEquipe = arig_utils::getAverageColor(source, probeGreenEquipe);
+    Scalar redEquipe = arig_utils::getAverageColor(source, probeRedEquipe);
+
+    config->redEcueil = arig_utils::ScalarBGR2HSV(arig_utils::meanBGR(redAdverse, redEquipe));
+    config->greenEcueil = arig_utils::ScalarBGR2HSV(arig_utils::meanBGR(greenAdverse, greenEquipe));
 
     return true;
 }

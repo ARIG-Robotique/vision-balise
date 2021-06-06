@@ -21,11 +21,13 @@ private:
 
     bool calibCouleurs(const Mat &source, Mat &output, const Point &markerCenter);
 
+    bool calibCouleursEcueil(const Mat &source, Mat &output);
+
     bool detectBouees(const Mat &imageHsv, Mat &output,
                       const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
                       Point &boueeTop, Point &boueeSide);
 
-    Mat debugResult(const Mat &source);
+    void debugResult(Mat &output);
 };
 
 

@@ -18,6 +18,8 @@ public:
     explicit Detection(Config* config);
     json run(const Mat &source);
 
+    static Point getEcueilPoint(const String &team, bool adverse, short i);
+
 private:
     bool lectureGirouette(const Mat &imageHsv, Mat &output, vector<string> &girouette);
     bool lectureEcueil(const Mat &imageHsv, Mat &output, bool adverse, vector<string> &ecueil);

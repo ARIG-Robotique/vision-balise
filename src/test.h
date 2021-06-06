@@ -68,8 +68,8 @@ void runTest(Mat &source, const Config *config) {
             (marker42.at(0).y + marker42.at(1).y) / 2.0
     );
 
-    string side = markerCenter.x > config->cameraResolution.width / 2.0 ? TEAM_BLEU : TEAM_JAUNE;
-    spdlog::debug("Coté {}", side == TEAM_BLEU ? "BLEU" : "JAUNE");
+    string team = markerCenter.x > config->cameraResolution.width / 2.0 ? TEAM_BLEU : TEAM_JAUNE;
+    spdlog::debug("Coté {}", team == TEAM_BLEU ? "BLEU" : "JAUNE");
 
     show(work, debugAll);
 
@@ -263,6 +263,53 @@ void runTest(Mat &source, const Config *config) {
 
     show(projected, debugAll);
 
+    // CALIBRATION COULEUR ECUEIL
+    int y = -67;
+    int offsetY = 5;
+    int xRedAdverse = 2000;
+    int xGreenAdverse = 2000 + 4 * 75;
+    int xRedEquipe = 1000;
+    int xGreenEquipe = 1000 - 4 * 75;
+    int offsetXRedAdvserse = -30;
+    int offsetXGreenAdvserse = -30 - 20;
+    int offsetXRedEquipe = 20;
+    int offsetXGreenEquipe = 20 + 20;
+    if (team == TEAM_JAUNE) {
+        xRedAdverse = 3000 - xRedAdverse;
+        xGreenAdverse = 3000 - xGreenAdverse;
+        xRedEquipe = 3000 - xRedEquipe;
+        xGreenEquipe = 3000 - xGreenEquipe;
+        offsetXRedAdvserse *= -1;
+        offsetXGreenAdvserse *= -1;
+        offsetXRedEquipe *= -1;
+        offsetXGreenEquipe *= -1;
+    }
+
+    auto probe1 = arig_utils::getProbe(arig_utils::tablePtToImagePt(Point(xRedAdverse, y)) + Point(offsetXRedAdvserse, offsetY), 15);
+    auto probe2 = arig_utils::getProbe(arig_utils::tablePtToImagePt(Point(xGreenAdverse, y)) + Point(offsetXGreenAdvserse, offsetY), 15);
+    auto probe3 = arig_utils::getProbe(arig_utils::tablePtToImagePt(Point(xRedEquipe, y)) + Point(offsetXRedEquipe, offsetY), 15);
+    auto probe4 = arig_utils::getProbe(arig_utils::tablePtToImagePt(Point(xGreenEquipe, y)) + Point(offsetXGreenEquipe, offsetY), 15);
+
+    Scalar greenAdverse = arig_utils::getAverageColor(projected, probe1);
+    Scalar redAdverse = arig_utils::getAverageColor(projected, probe2);
+    Scalar redEquipe = arig_utils::getAverageColor(projected, probe3);
+    Scalar greenEquipe = arig_utils::getAverageColor(projected, probe4);
+
+    Scalar redEcueil = arig_utils::ScalarBGR2HSV(arig_utils::meanBGR(redAdverse, redEquipe));
+    Scalar greenEcueil = arig_utils::ScalarBGR2HSV(arig_utils::meanBGR(greenAdverse, greenEquipe));
+
+    spdlog::debug("Rouge ecueil {}", redEcueil);
+    spdlog::debug("Vert ecueil {}", greenEcueil);
+
+    work = projected.clone();
+
+    rectangle(work, probe1, Scalar(255, 255, 255), 1);
+    rectangle(work, probe2, Scalar(255, 255, 255), 1);
+    rectangle(work, probe3, Scalar(255, 255, 255), 1);
+    rectangle(work, probe4, Scalar(255, 255, 255), 1);
+
+    show(work, debugAll);
+
     work = projected.clone();
 
     circle(work, Point2f((3000 - 670) / 2.0, (2000 - 100) / 2.0), 20, Scalar(0, 0, 255), 1);
@@ -317,9 +364,9 @@ void runTest(Mat &source, const Config *config) {
     // equipe
     vector<Rect> probes;
     for (auto i = 0; i < 5; i++) {
-        auto x = side == TEAM_BLEU ? (1000 - i * 75) : (2000 + i * 75);
+        auto x = team == TEAM_BLEU ? (1000 - i * 75) : (2000 + i * 75);
         auto y = -67;
-        auto offsetX = (side == TEAM_BLEU ? 1 : -1) * (20 + 20 * i / 4.0); // offset de 20 à 40 pixels sur x
+        auto offsetX = (team == TEAM_BLEU ? 1 : -1) * (20 + 20 * i / 4.0); // offset de 20 à 40 pixels sur x
         auto offsetY = 5;
         probes.emplace_back(
                 arig_utils::getProbe(Point2f((3000 - x) / 2.0 + offsetX, (2000 - y) / 2.0 + offsetY), 15));
@@ -330,9 +377,9 @@ void runTest(Mat &source, const Config *config) {
         auto color = arig_utils::getAverageColor(projected, probe);
         auto hue = arig_utils::ScalarBGR2HSV(color)[0];
 
-        auto dRed = abs(hue - red[0]);
+        auto dRed = abs(hue - redEcueil[0]);
         dRed = min(dRed, 180 - dRed);
-        auto dGreen = abs(hue - green[0]);
+        auto dGreen = abs(hue - greenEcueil[0]);
         dGreen = min(dGreen, 180 - dGreen);
 
         string res;
@@ -352,9 +399,9 @@ void runTest(Mat &source, const Config *config) {
     // adverse
     probes.clear();
     for (auto i = 0; i < 5; i++) {
-        auto x = side == TEAM_BLEU ? (2000 + i * 75) : (1000 - i * 75);
+        auto x = team == TEAM_BLEU ? (2000 + i * 75) : (1000 - i * 75);
         auto y = -67;
-        auto offsetX = (side == TEAM_BLEU ? -1 : 1) * (30 + 20 * i / 4.0); // offset de 30 à 50 pixels sur x
+        auto offsetX = (team == TEAM_BLEU ? -1 : 1) * (30 + 20 * i / 4.0); // offset de 30 à 50 pixels sur x
         auto offsetY = 5;
         probes.emplace_back(
                 arig_utils::getProbe(Point2f((3000 - x) / 2.0 + offsetX, (2000 - y) / 2.0 + offsetY), 15));
@@ -364,9 +411,9 @@ void runTest(Mat &source, const Config *config) {
         auto color = arig_utils::getAverageColor(projected, probe);
         auto hue = arig_utils::ScalarBGR2HSV(color)[0];
 
-        auto dRed = abs(hue - red[0]);
+        auto dRed = abs(hue - redEcueil[0]);
         dRed = min(dRed, 180 - dRed);
-        auto dGreen = abs(hue - green[0]);
+        auto dGreen = abs(hue - greenEcueil[0]);
         dGreen = min(dGreen, 180 - dGreen);
 
         string res;
@@ -482,7 +529,8 @@ void runTest(Mat &source, const Config *config) {
             continue;
         }
 
-        auto ptX = x > 750 ? arig_utils::pointsOfMinX(contoursGreen.at(i)) : arig_utils::pointsOfMaxX(contoursGreen.at(i));
+        auto ptX =
+                x > 750 ? arig_utils::pointsOfMinX(contoursGreen.at(i)) : arig_utils::pointsOfMaxX(contoursGreen.at(i));
         auto ptY = arig_utils::pointsOfMaxY(contoursGreen.at(i));
 
         auto pt = Point2f(arig_utils::averageX(ptY), arig_utils::averageY(ptX));

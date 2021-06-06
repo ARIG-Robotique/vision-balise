@@ -122,36 +122,37 @@ bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string
 }
 
 /**
+ * Calcule la position d'une bouée d'un écueil dans l'image
+ */
+Point Detection::getEcueilPoint(const String &team, bool adverse, short i) {
+    // x et y dans le coordonnées de la table
+    int x = adverse ? (2000 + i * 75) : (1000 - i * 75);
+    int y = -67;
+    if (team == TEAM_JAUNE) {
+        x = 3000 - x;
+    }
+
+    // offset x et y en pixels sur l'image
+    int offsetX = adverse ? -(30 + 20 * i / 4.0) : (20 + 20 * i / 4.0);
+    int offsetY = 5;
+    if (team == TEAM_JAUNE) {
+        offsetX *= -1;
+    }
+
+    return arig_utils::tablePtToImagePt(Point(x, y)) + Point(offsetX, offsetY);
+}
+
+/**
  * Lit les couleurs d'un ecueil
  */
 bool Detection::lectureEcueil(const Mat &imageHsv, Mat &output, bool adverse, vector<string> &ecueil) {
-    vector<Rect> probes;
-    for (auto i = 0; i < 5; i++) {
-        // x et y dans le coordonnées de la table
-        int x = adverse ? (2000 + i * 75) : (1000 - i * 75);
-        int y = -67;
-        if (config->team == TEAM_JAUNE) {
-            x = 3000 - x;
-        }
-
-        // offset x et y en pixels sur l'image
-        int offsetX = adverse ? -(30 + 20 * i / 4.0) : (20 + 20 * i / 4.0);
-        int offsetY = 5;
-        if (config->team == TEAM_JAUNE) {
-            offsetX *= -1;
-        }
-
-        auto probe = arig_utils::tablePtToImagePt(Point(x, y)) + Point(offsetX, offsetY);
-        probes.emplace_back(arig_utils::getProbe(probe, 15));
-    }
-
-    for (auto &probe : probes) {
+    for (short i = 0; i < 5; i++) {
+        auto point = Detection::getEcueilPoint(config->team, adverse, i);
+        auto probe = arig_utils::getProbe(point, config->probeSize);
         auto color = arig_utils::getAverageColor(imageHsv, probe);
 
-        auto dRed = abs(color[0] - config->red[0]);
-        dRed = min(dRed, 180 - dRed);
-        auto dGreen = abs(color[0] - config->green[0]);
-        dGreen = min(dGreen, 180 - dGreen);
+        auto dRed = arig_utils::deltaHue(color, config->redEcueil);
+        auto dGreen = arig_utils::deltaHue(color, config->greenEcueil);
 
         string res;
         if (dRed < config->colorThreshold) {

@@ -53,6 +53,10 @@ namespace arig_utils {
     Point imagePtToTablePt(const Point &pt);
 
     void hsvInRange(const Mat &imageHsv, const vector<Scalar> &range, Mat &output);
+
+    Scalar meanBGR(const Scalar &scalar1, const Scalar &scalar2);
+
+    double deltaHue(const Scalar &scalar1, const Scalar &scalar2);
 }
 
 #endif //VISION_BALISE_UTILS_H
