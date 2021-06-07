@@ -22,6 +22,7 @@ set(DOWNLOAD_DIR "download")
 
 # Pour faire de la cross compilation
 if (DEFINED BUILD_PI)
+    add_definitions(-DPI)
     set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/tools)
     set(CMAKE_TOOLCHAIN_FILE ./raspberry.cmake)
 endif()
@@ -35,7 +36,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if (NOT DEFINED ${CMAKE_BUILD_TYPE})
+if (NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
@@ -63,7 +64,7 @@ execute_process(
 # Inclusion de la lib externe OpenCV #
 ########################################
 set(OpenCV_SHARED OFF)
-if (DEFINED ${BUILD_PI})
+if (DEFINED BUILD_PI)
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi")
 else()
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build")
@@ -96,10 +97,6 @@ include_directories(${SSD1306_DIR}/lib)
 
 # Récupération des sources du projet #
 ######################################
-if (DEFINED BUILD_PI)
-    add_compile_definitions(PI)
-endif()
-
 file(GLOB SRCS "src/*.cpp")
 file(GLOB HEADERS "src/*.h")
 
