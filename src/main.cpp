@@ -6,12 +6,12 @@
 #include "ProcessThread.h"
 #include "test.h"
 
-String getTimeStr() {
+string getTimeStr() {
     time_t now = time(nullptr);
     tm *ptm = localtime(&now);
     char timeBuffer[15];
     strftime(timeBuffer, 15, "%Y%m%d%H%M%S", ptm);
-    return String(timeBuffer);
+    return string(timeBuffer);
 }
 
 int main(int argc, char **argv) {

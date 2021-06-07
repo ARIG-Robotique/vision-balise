@@ -97,6 +97,23 @@ namespace arig_utils {
         return arr;
     }
 
+    String exec(const string &cmd) {
+        array<char, 128> buffer{};
+        String result;
+        unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+        if (!pipe) {
+            return String();
+        }
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        auto newLine = result.find('\n');
+        if (newLine > 0) {
+            result = result.substr(0, newLine);
+        }
+        return result;
+    }
+
     string basename(const string &path) {
         return path.substr(path.find_last_of("/\\") + 1);
     }

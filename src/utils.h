@@ -30,6 +30,8 @@ namespace arig_utils {
 
     json scalars2json(const vector<Scalar> &scalars);
 
+    String exec(const string &cmd);
+
     string basename(const string &path);
 
     string matToBase64(const Mat &mat);

@@ -20,6 +20,10 @@ SPDLOG_VERSION=1.3.1
 SPDLOG_FILENAME=spdlog-${SPDLOG_VERSION}
 SPDLOG_DOWNLOAD_URL=https://github.com/gabime/spdlog/archive/v${SPDLOG_VERSION}.zip
 
+SSD1306_VERSION=master
+SSD1306_FILENAME=libSSD1306-${SSD1306_VERSION}
+SSD1306_DOWNLOAD_URL=https://github.com/AndrewFromMelbourne/libSSD1306/archive/${SSD1306_VERSION}.zip
+
 RASPBERRY_TOOLS=https://github.com/rvagg/rpi-newer-crosstools.git
 
 echo "-- Download external dependencies"
@@ -67,8 +71,11 @@ if [ "${1}" = "build-pi" ] ; then
         mkdir opencv/build-pi
     fi
     cd opencv/build-pi
-    cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DPI_TOOLS_HOME=${DOWNLOAD_DIR}/tools -DBUILD_SHARED_LIBS=Off -DCMAKE_TOOLCHAIN_FILE=${DOWNLOAD_DIR}/../raspberry.cmake ..
-
+    cmake \
+      -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+      -DPI_TOOLS_HOME=${DOWNLOAD_DIR}/tools -DCMAKE_TOOLCHAIN_FILE=${DOWNLOAD_DIR}/../raspberry.cmake \
+      -DBUILD_SHARED_LIBS=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_JAVA=OFF \
+      ..
 else
     echo "-- Config pour PC local"
     cd ${DOWNLOAD_DIR}
@@ -76,7 +83,10 @@ else
         mkdir opencv/build
     fi
     cd opencv/build
-    cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DBUILD_SHARED_LIBS=Off ..
+    cmake \
+      -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+      -DBUILD_SHARED_LIBS=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_JAVA=OFF \
+      ..
 fi
 
 cd ${DOWNLOAD_DIR}
@@ -93,6 +103,13 @@ if [ ! -f "${SPDLOG_FILENAME}.zip" ] ; then
   echo "---- Download SPDLOG ${SPDLOG_VERSION} ..."
   curl -L ${SPDLOG_DOWNLOAD_URL} -o ${SPDLOG_FILENAME}.zip
   unzip ${SPDLOG_FILENAME}.zip
-
   ln -s ${SPDLOG_FILENAME}/include spdlog
+fi
+
+cd ${DOWNLOAD_DIR}
+if [ ! -f "${SSD1306_FILENAME}.zip" ] ; then
+  echo "--- Download SSD1306 ${SSD1306_VERSION} ..."
+  curl -L ${SSD1306_DOWNLOAD_URL} -o ${SSD1306_FILENAME}.zip
+  unzip ${SSD1306_FILENAME}.zip
+  ln -s ${SSD1306_FILENAME} libSSD1306
 fi

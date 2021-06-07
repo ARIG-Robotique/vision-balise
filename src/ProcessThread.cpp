@@ -7,6 +7,8 @@
 ProcessThread::ProcessThread(Config *config) {
     m_config = config;
 
+    m_screen = new Screen(config);
+
     if (!m_config->mockPhoto.empty()) {
         m_ready = pthread_create(&m_thread, nullptr, &ProcessThread::create, this) != -1;
     } else {
@@ -173,6 +175,8 @@ void *ProcessThread::process() {
         action = m_action;
         pthread_mutex_unlock(&m_actionMutex);
 
+        updateScreen();
+
         if (action.empty()) {
             spdlog::debug("ProcessThread: no action");
             this_thread::sleep_for(chrono::milliseconds(m_config->idleDelay));
@@ -182,6 +186,7 @@ void *ProcessThread::process() {
                 m_videoThread->exit();
             }
             spdlog::info("ProcessThread: Demande d'arret du thread");
+            updateScreen();
             stop = true;
 
         } else if (action == ACTION_IDLE) {
@@ -267,6 +272,7 @@ void ProcessThread::processIdle() {
 
         i++;
 
+        updateScreen();
         this_thread::sleep_for(chrono::milliseconds(m_config->idleDelay));
     }
 }
@@ -296,6 +302,22 @@ void ProcessThread::processDetection() {
             pthread_mutex_unlock(&m_dataMutex);
         }
 
+        updateScreen();
         this_thread::sleep_for(chrono::milliseconds(m_config->detectionDelay));
+    }
+}
+
+void ProcessThread::updateScreen() {
+    if (m_action == ACTION_EXIT) {
+        m_screen->showInfo("POWEROFF", "");
+
+    } else if (m_action == ACTION_IDLE) {
+        m_screen->showInfo("En attente", m_config->etalonnageDone ? "Etalonnage OK" : "Etallonage KO");
+
+    } else if (m_action == ACTION_DETECTION) {
+        m_screen->showInfo("Détection", m_config->team.c_str());
+
+    } else {
+        m_screen->showInfo("N/A", "");
     }
 }

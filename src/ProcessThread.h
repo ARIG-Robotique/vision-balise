@@ -4,12 +4,14 @@
 #include "common.h"
 #include "Config.h"
 #include "VideoThread.h"
+#include "Screen.h"
 
 class ProcessThread {
 
 private:
     Config* m_config;
     VideoThread* m_videoThread;
+    Screen* m_screen;
 
     pthread_t m_thread;
     pthread_mutex_t m_dataMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -41,6 +43,7 @@ private:
     static void * create(void* context);
 
     JsonResult action(const char *_action);
+    void updateScreen();
 
     void processIdle();
     void processDetection();

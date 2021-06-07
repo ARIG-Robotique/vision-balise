@@ -35,7 +35,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if (NOT DEFINED CMAKE_BUILD_TYPE)
+if (NOT DEFINED ${CMAKE_BUILD_TYPE})
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
@@ -63,12 +63,11 @@ execute_process(
 # Inclusion de la lib externe OpenCV #
 ########################################
 set(OpenCV_SHARED OFF)
-if (DEFINED BUILD_PI)
+if (DEFINED ${BUILD_PI})
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build-pi")
 else()
     set(OpenCV_DIR "${DOWNLOAD_DIR}/opencv/build")
 endif()
-#find_package(OpenCV REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui aruco)
 
 message(STATUS "OpenCV library status:")
@@ -89,10 +88,20 @@ include_directories(${JSON_LIB_DIR})
 set(SPDLOG_LIB_DIR "${DOWNLOAD_DIR}/spdlog")
 include_directories(${SPDLOG_LIB_DIR})
 
-# Récupération des sources du projet principale #
+# Récupération de la définition pour libSSD1306 #
 #################################################
+set(SSD1306_DIR "${DOWNLOAD_DIR}/libSSD1306")
+add_subdirectory(${SSD1306_DIR})
+include_directories(${SSD1306_DIR}/lib)
+
+# Récupération des sources du projet #
+######################################
+if (DEFINED BUILD_PI)
+    add_compile_definitions(PI)
+endif()
+
 file(GLOB SRCS "src/*.cpp")
 file(GLOB HEADERS "src/*.h")
 
 add_executable(${PROJECT_NAME} ${SRCS} ${HEADERS})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} pthread)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} SSD1306 pthread)
