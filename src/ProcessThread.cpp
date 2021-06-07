@@ -312,10 +312,10 @@ void ProcessThread::updateScreen() {
         m_screen->showInfo("POWEROFF", "");
 
     } else if (m_action == ACTION_IDLE) {
-        m_screen->showInfo("En attente", m_config->etalonnageDone ? "Etalonnage OK" : "Etallonage KO");
+        m_screen->showInfo("En attente", m_config->etalonnageDone ? "Etalonnage OK" : "Etalonage KO");
 
     } else if (m_action == ACTION_DETECTION) {
-        m_screen->showInfo("Détection", m_config->team.c_str());
+        m_screen->showInfo("Detection", m_config->team.c_str());
 
     } else {
         m_screen->showInfo("N/A", "");
