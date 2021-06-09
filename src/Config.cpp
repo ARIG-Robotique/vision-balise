@@ -100,3 +100,13 @@ vector<Point> Config::getDetectionZone() const {
             Point(50, cameraResolution.height - 250),
     };
 }
+
+void Config::reset() {
+    etalonnageDone = false;
+    team = TEAM_UNKNOWN;
+    red = Scalar();
+    green = Scalar();
+    redEcueil = Scalar();
+    greenEcueil = Scalar();
+    girouette = DIR_UNKNOWN;
+}

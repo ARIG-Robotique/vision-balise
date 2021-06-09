@@ -19,8 +19,10 @@ public:
     explicit Screen(Config* config);
 
     void showLogo();
-
+    void clear();
+    void showInfo(const char* line1);
     void showInfo(const char* line1, const char* line2);
+    void showInfo(const char* line1, const char* line2, const char* line3);
 
 private:
     void printLn(const char* str, short line);

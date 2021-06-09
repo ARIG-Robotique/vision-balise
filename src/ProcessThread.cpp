@@ -77,7 +77,9 @@ JsonResult ProcessThread::getPhoto() {
 }
 
 JsonResult ProcessThread::setIdle() {
-    return action(ACTION_IDLE);
+    JsonResult r = action(ACTION_IDLE);
+    m_config->reset();
+    return r;
 }
 
 /**
@@ -125,8 +127,9 @@ JsonResult ProcessThread::startEtalonnage() {
  * Demande au sous process de s'arreter
  * @return
  */
-JsonResult ProcessThread::exit() {
-    return action(ACTION_EXIT);
+void ProcessThread::exit() {
+    action(ACTION_EXIT);
+    updateScreen();
 }
 
 /**
@@ -186,7 +189,6 @@ void *ProcessThread::process() {
                 m_videoThread->exit();
             }
             spdlog::info("ProcessThread: Demande d'arret du thread");
-            updateScreen();
             stop = true;
 
         } else if (action == ACTION_IDLE) {
@@ -309,15 +311,23 @@ void ProcessThread::processDetection() {
 
 void ProcessThread::updateScreen() {
     if (m_action == ACTION_EXIT) {
-        m_screen->showInfo("POWEROFF", "");
+        m_screen->clear();
 
     } else if (m_action == ACTION_IDLE) {
-        m_screen->showInfo("En attente", m_config->etalonnageDone ? "Etalonnage OK" : "Etalonage KO");
+        if (m_config->etalonnageDone) {
+            m_screen->showInfo("En attente",
+                               ("Team:" + m_config->team).c_str());
+        } else {
+            m_screen->showInfo("En attente",
+                               "Etalonnage KO");
+        }
 
     } else if (m_action == ACTION_DETECTION) {
-        m_screen->showInfo("Detection", m_config->team.c_str());
+        m_screen->showInfo("Detection",
+                           ("Team:" + m_config->team).c_str(),
+                           ("Gir:" + m_config->girouette).c_str());
 
     } else {
-        m_screen->showInfo("N/A", "");
+        m_screen->showInfo("N/A");
     }
 }

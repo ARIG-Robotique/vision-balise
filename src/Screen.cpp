@@ -1,5 +1,5 @@
 #include "OledBitmap.h"
-#include "OledFont8x16.h"
+#include "OledFont8x12.h"
 #include "OledGraphics.h"
 #include "Screen.h"
 #include "utils.h"
@@ -98,14 +98,32 @@ void Screen::showLogo() {
     update();
 }
 
-void Screen::showInfo(const char *line1, const char *line2) {
-    spdlog::debug("Screen {} {}", line1, line2);
-
+void Screen::clear() {
     display->clear();
+    update();
+}
+
+void Screen::showInfo(const char *line1) {
+    showInfo("ARIG", line1);
+}
+
+void Screen::showInfo(const char *line1, const char *line2) {
+    showInfo(line1, line2, getLocalIp().c_str());
+}
+
+void Screen::showInfo(const char *line1, const char *line2, const char *line3) {
+    display->clear();
+
+    SSD1306::box(SSD1306::OledPoint(2, 2),
+                 SSD1306::OledPoint(125, 61),
+                 SSD1306::PixelStyle::Set,
+                 *display);
+
     printLn(line1, 0);
     printLn(line2, 1);
-    printLn(getSystemTemp().c_str(), 2);
-    printLn(getLocalIp().c_str(), 3);
+    printLn(line3, 2);
+    printLn(getSystemTemp().c_str(), 3);
+
     update();
 }
 
@@ -115,23 +133,22 @@ void Screen::update() {
 #else
     Mat image(64, 128, CV_8UC3, Scalar(0, 0, 0));
 
-    for (short r = 0; r < 128; r++) {
-        for (short c = 0; c < 64; c++) {
+    for (short r = 0; r < 64; r++) {
+        for (short c = 0; c < 128; c++) {
             if (display->isSetPixel(SSD1306::OledPoint(c, r))) {
                 image.at<Vec3b>(r, c) = Vec3b(255, 255, 255);
             }
         }
     }
 
-//    imwrite("test.png", image);
-// FIXME ne fonctionne pas depuis un thread
-//    imshow("Screen", image);
+//    imshow("Screen", image); // FIXME ne fonctionne pas depuis un thread
+//    imwrite(config->outputPrefix + "screen.png", image);
 #endif
 }
 
 void Screen::printLn(const char *str, short line) {
-    drawString8x16(SSD1306::OledPoint(0, line * 16),
-                   str,
-                   SSD1306::PixelStyle::Set,
-                   *display);
+    SSD1306::drawString8x12(SSD1306::OledPoint(8, 8 + line * 12),
+                            str,
+                            SSD1306::PixelStyle::Set,
+                            *display);
 }

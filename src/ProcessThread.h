@@ -33,7 +33,7 @@ public:
     JsonResult startDetection();
     JsonResult startEtalonnage();
 
-    JsonResult exit();
+    void exit();
 
     Mat& getImgOrig();
     bool takePhoto();
