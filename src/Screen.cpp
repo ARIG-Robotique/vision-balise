@@ -180,9 +180,9 @@ void Screen::showDetection(const json &detectionResult) {
                 SSD1306::OledPoint(50 - 4, 20),
                 SSD1306::OledPoint(58 - 4, 10),
                 SSD1306::OledPoint(70 - 4, 10),
-                SSD1306::OledPoint(76 - 4, 20),
-                SSD1306::OledPoint(84 - 4, 30),
-                SSD1306::OledPoint(92 - 4, 40),
+                SSD1306::OledPoint(78 - 4, 20),
+                SSD1306::OledPoint(88 - 4, 30),
+                SSD1306::OledPoint(98 - 4, 40),
         };
 
         short i = 0;
