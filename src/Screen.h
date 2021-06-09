@@ -8,24 +8,27 @@
 class Screen {
 
 private:
-    Config* config;
+    Config *config;
 #ifdef PI
     SSD1306::OledI2C* display;
 #else
-    SSD1306::OledBitmap<128, 64>* display;
+    SSD1306::OledBitmap<128, 64> *display;
 #endif
 
 public:
-    explicit Screen(Config* config);
+    explicit Screen(Config *config);
 
     void showLogo();
+
     void clear();
-    void showInfo(const char* line1);
-    void showInfo(const char* line1, const char* line2);
-    void showInfo(const char* line1, const char* line2, const char* line3);
+
+    void showInfo(const string &line1, const string &line2);
+
+    void showDetection(const json &detectionResult);
 
 private:
-    void printLn(const char* str, short line);
+    void printLn(const string &str, short line);
+
     void update();
 };
 

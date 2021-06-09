@@ -41,9 +41,6 @@ public:
     Mat perspectiveMap;
     Size perspectiveSize;
 
-    // from detection
-    String girouette = DIR_UNKNOWN;
-
     vector<Scalar> getRedRange() const;
     vector<Scalar> getGreenRange() const;
     vector<Point> getDetectionZone() const;

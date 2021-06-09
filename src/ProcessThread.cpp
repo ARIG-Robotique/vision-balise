@@ -315,19 +315,19 @@ void ProcessThread::updateScreen() {
 
     } else if (m_action == ACTION_IDLE) {
         if (m_config->etalonnageDone) {
-            m_screen->showInfo("En attente",
-                               ("Team:" + m_config->team).c_str());
+            m_screen->showInfo("En attente", "Team:" + m_config->team);
         } else {
-            m_screen->showInfo("En attente",
-                               "Etalonnage KO");
+            m_screen->showInfo("En attente", "Etalonnage KO");
         }
 
     } else if (m_action == ACTION_DETECTION) {
-        m_screen->showInfo("Detection",
-                           ("Team:" + m_config->team).c_str(),
-                           ("Gir:" + m_config->girouette).c_str());
+        if (!m_detectionResult.empty()) {
+            m_screen->showDetection(m_detectionResult);
+        } else {
+            m_screen->showInfo("Détection", "Team:" + m_config->team);
+        }
 
     } else {
-        m_screen->showInfo("N/A");
+        m_screen->showInfo("N/A", "");
     }
 }

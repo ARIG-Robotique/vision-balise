@@ -123,6 +123,8 @@ int main(int argc, char **argv) {
 
     socket.init();
     processThread.setIdle();
+    processThread.startEtalonnage();
+    processThread.startDetection();
 
     // boucle de commande
     bool stop = false, waitConnection = true;

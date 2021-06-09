@@ -28,10 +28,6 @@ json Detection::run(const Mat &source) {
     vector<string> girouette;
     if (lectureGirouette(imageHsv, output, girouette)) {
         r["girouette"] = girouette.at(0);
-        config->girouette = girouette.at(0);
-    } else {
-        r["girouette"] = DIR_UNKNOWN;
-        config->girouette = DIR_UNKNOWN;
     }
 
     // LECTURE ECUEILS

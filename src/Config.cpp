@@ -108,5 +108,4 @@ void Config::reset() {
     green = Scalar();
     redEcueil = Scalar();
     greenEcueil = Scalar();
-    girouette = DIR_UNKNOWN;
 }

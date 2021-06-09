@@ -1,8 +1,16 @@
 #include "OledBitmap.h"
+#include "OledFont8x8.h"
 #include "OledFont8x12.h"
 #include "OledGraphics.h"
 #include "Screen.h"
 #include "utils.h"
+
+const SSD1306::OledBitmap<8, 8> bulletFull{
+        0x18, 0x7e, 0x7e, 0xff, 0xff, 0x7e, 0x7e, 0x18
+};
+const SSD1306::OledBitmap<8, 8> bulletEmpty{
+        0x18, 0x66, 0x42, 0x81, 0x81, 0x42, 0x66, 0x18
+};
 
 const SSD1306::OledBitmap<128, 64> logo{
         0x00, 0x01, 0xff, 0xff, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0x80, 0x00,
@@ -75,7 +83,7 @@ String getSystemTemp() {
 #ifdef PI
     return arig_utils::exec("vcgencmd measure_temp | cut -d'=' -f2");
 #else
-    return arig_utils::exec("sensors | grep 'Package' | cut -d' ' -f5 | tr '°' \"'\"");
+    return arig_utils::exec("sensors | grep 'Package' | cut -d' ' -f5 | sed \"s/°/'/\"");
 #endif
 }
 
@@ -103,15 +111,7 @@ void Screen::clear() {
     update();
 }
 
-void Screen::showInfo(const char *line1) {
-    showInfo("ARIG", line1);
-}
-
-void Screen::showInfo(const char *line1, const char *line2) {
-    showInfo(line1, line2, getLocalIp().c_str());
-}
-
-void Screen::showInfo(const char *line1, const char *line2, const char *line3) {
+void Screen::showInfo(const string &line1, const string &line2) {
     display->clear();
 
     SSD1306::box(SSD1306::OledPoint(2, 2),
@@ -121,8 +121,89 @@ void Screen::showInfo(const char *line1, const char *line2, const char *line3) {
 
     printLn(line1, 0);
     printLn(line2, 1);
-    printLn(line3, 2);
-    printLn(getSystemTemp().c_str(), 3);
+    printLn(getSystemTemp(), 2);
+    printLn(getLocalIp(), 3);
+
+    update();
+}
+
+void Screen::showDetection(const json &detectionResult) {
+    display->clear();
+
+    SSD1306::box(SSD1306::OledPoint(0, 0),
+                 SSD1306::OledPoint(127, 63),
+                 SSD1306::PixelStyle::Set,
+                 *display);
+
+    if (!detectionResult["girouette"].empty()) {
+        string girouette =
+                detectionResult["girouette"] == DIR_UP ? "N" : detectionResult["girouette"] == DIR_DOWN ? "S" : "?";
+        SSD1306::drawString8x12(SSD1306::OledPoint(64 - 4, 36),
+                                girouette,
+                                SSD1306::PixelStyle::Set,
+                                *display);
+    }
+
+    if (!detectionResult["ecueilEquipe"].empty() && !detectionResult["ecueilAdverse"].empty()) {
+        string ecueilGauche;
+        string ecueilDroit;
+        for (const auto &item : detectionResult["ecueilEquipe"]) {
+            if (config->team == TEAM_BLEU) {
+                ecueilDroit += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
+            } else {
+                ecueilGauche += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
+            }
+        }
+        for (const auto &item : detectionResult["ecueilAdverse"]) {
+            if (config->team == TEAM_BLEU) {
+                ecueilGauche += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
+            } else {
+                ecueilDroit += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
+            }
+        }
+        reverse(ecueilGauche.begin(), ecueilGauche.end());
+
+        SSD1306::drawString8x12(SSD1306::OledPoint(64 + 10, 50),
+                                ecueilDroit,
+                                SSD1306::PixelStyle::Set,
+                                *display);
+        SSD1306::drawString8x12(SSD1306::OledPoint(64 - 10 - 5 * 8, 50),
+                                ecueilGauche,
+                                SSD1306::PixelStyle::Set,
+                                *display);
+    }
+
+    if (!detectionResult["bouees"].empty()) {
+        vector<SSD1306::OledPoint> positions = {
+                SSD1306::OledPoint(30 - 4, 40),
+                SSD1306::OledPoint(40 - 4, 30),
+                SSD1306::OledPoint(50 - 4, 20),
+                SSD1306::OledPoint(58 - 4, 10),
+                SSD1306::OledPoint(70 - 4, 10),
+                SSD1306::OledPoint(76 - 4, 20),
+                SSD1306::OledPoint(84 - 4, 30),
+                SSD1306::OledPoint(92 - 4, 40),
+        };
+
+        short i = 0;
+        for (const auto &item : positions) {
+            if (detectionResult["bouees"][i++] == BOUE_PRESENT) {
+                display->setFrom(bulletFull, item);
+            } else {
+                display->setFrom(bulletEmpty, item);
+            }
+        }
+    }
+
+    SSD1306::drawString8x8(SSD1306::OledPoint(2, 2),
+                            getSystemTemp(),
+                            SSD1306::PixelStyle::Set,
+                            *display);
+
+    SSD1306::drawString8x12(SSD1306::OledPoint(125 - 5 * 8, 2),
+                            config->team,
+                            SSD1306::PixelStyle::Set,
+                            *display);
 
     update();
 }
@@ -142,11 +223,11 @@ void Screen::update() {
     }
 
 //    imshow("Screen", image); // FIXME ne fonctionne pas depuis un thread
-//    imwrite(config->outputPrefix + "screen.png", image);
+    imwrite(config->outputPrefix + "screen.png", image);
 #endif
 }
 
-void Screen::printLn(const char *str, short line) {
+void Screen::printLn(const string &str, short line) {
     SSD1306::drawString8x12(SSD1306::OledPoint(8, 8 + line * 12),
                             str,
                             SSD1306::PixelStyle::Set,
