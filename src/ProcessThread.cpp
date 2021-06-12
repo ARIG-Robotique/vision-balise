@@ -315,7 +315,7 @@ void ProcessThread::updateScreen() {
 
     } else if (m_action == ACTION_IDLE) {
         if (m_config->etalonnageDone) {
-            m_screen->showInfo("En attente", "Team:" + m_config->team);
+            m_screen->showInfo("Etalonnage OK", "Team:" + m_config->team);
         } else {
             m_screen->showInfo("En attente", "Etalonnage KO");
         }
