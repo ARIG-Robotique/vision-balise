@@ -1,4 +1,5 @@
 #include <ctime>
+#include <csignal>
 #include "spdlog/sinks/basic_file_sink.h"
 #include "common.h"
 #include "Calibration.h"
@@ -13,6 +14,8 @@ string getTimeStr() {
     strftime(timeBuffer, 15, "%Y%m%d%H%M%S", ptm);
     return string(timeBuffer);
 }
+
+std::function<void(int)> shutdown_handler;
 
 int main(int argc, char **argv) {
     const String keys =
@@ -126,6 +129,16 @@ int main(int argc, char **argv) {
 
     // boucle de commande
     bool stop = false, waitConnection = true;
+
+    shutdown_handler = [&](int v) mutable {
+        processThread.exit();
+        socket.end();
+        exit(v);
+    };
+    signal(SIGTERM, [](int v) {
+        shutdown_handler(v);
+    });
+
     while (!stop) {
         if (waitConnection) {
             spdlog::debug("Attente de connexion client ...");
