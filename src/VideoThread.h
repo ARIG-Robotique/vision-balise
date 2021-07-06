@@ -80,7 +80,7 @@ private:
         m_video->set(CV_CAP_PROP_FRAME_WIDTH, m_config->cameraResolution.width);
         m_video->set(CV_CAP_PROP_FRAME_HEIGHT, m_config->cameraResolution.height);
         m_video->set(CV_CAP_PROP_FPS, 20);
-        m_video->set(CV_CAP_PROP_BUFFERSIZE, 3);
+//        m_video->set(CV_CAP_PROP_BUFFERSIZE, 3);
 
         bool first = true;
         while (!this->stop) {

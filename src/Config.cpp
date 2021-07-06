@@ -87,8 +87,8 @@ vector<Scalar> Config::getRedRange() const {
 // V +- 50
 vector<Scalar> Config::getGreenRange() const {
     return {
-            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 50, 0.0)),
-            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 50, 255.0))
+            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 100, 0.0)),
+            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 100, 255.0))
     };
 }
 

@@ -227,6 +227,7 @@ bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
                               Point &boueeTop, Point &boueeSide) {
     Mat imageThreshold;
     arig_utils::hsvInRange(imageHsv, colorRange, imageThreshold);
+    imwrite(config->outputPrefix + (sideIsMinX ? "thres-ver.jpg" : "thres-rouge.jpg"), imageThreshold);
     erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
     dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
 
