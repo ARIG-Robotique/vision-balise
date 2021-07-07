@@ -43,7 +43,7 @@ public:
 
     vector<Scalar> getRedRange() const;
     vector<Scalar> getGreenRange() const;
-    vector<Point> getDetectionZone() const;
+    vector<Point> getDetectionZone(int offsetXMarker) const;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);

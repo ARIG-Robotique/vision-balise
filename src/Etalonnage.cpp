@@ -26,7 +26,6 @@ JsonResult Etalonnage::run(const Mat &source) {
     config->team = markerCenter.x > config->cameraResolution.width / 2.0 ? TEAM_BLEU : TEAM_JAUNE;
     spdlog::debug("Équipe {}", config->team);
 
-
     // CALIBRATION DES COULEURS
     if (!calibCouleurs(source, output1, markerCenter)) {
         r.status = RESPONSE_ERROR;
@@ -37,49 +36,12 @@ JsonResult Etalonnage::run(const Mat &source) {
     spdlog::debug("Rouge {}", config->red);
     spdlog::debug("Vert {}", config->green);
 
-
-    // DETECTION DE BOUEES AUX EXTREMITES
-    // zone de detection pour eviter les faux positifs
-    vector<Point> detectionZone = config->getDetectionZone();
-    vector<Scalar> redRange = config->getRedRange();
-    vector<Scalar> greenRange = config->getGreenRange();
-
-    Mat imageHsv;
-    cvtColor(source, imageHsv, COLOR_BGR2HSV);
-
-    Point bouee8, bouee12, bouee5, bouee9;
-    if (!detectBouees(imageHsv, output1, redRange, detectionZone, false, bouee8, bouee12) ||
-        !detectBouees(imageHsv, output1, greenRange, detectionZone, true, bouee9, bouee5)) {
+    // CALIBRATION PERSPECTIVE
+    if (!calculPerspective(source, output1, markerCenter)) {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de détecter les bouées";
         return r;
     }
-
-    spdlog::debug("Bouee 8 : {}", bouee8);
-    spdlog::debug("Bouee 12 : {}", bouee12);
-    spdlog::debug("Bouee 9 : {}", bouee9);
-    spdlog::debug("Bouee 5 : {}", bouee5);
-
-    polylines(output1, detectionZone, true, arig_utils::BLUE, 1);
-    circle(output1, bouee8, 20, arig_utils::RED, 1);
-    circle(output1, bouee12, 20, arig_utils::RED, 1);
-    circle(output1, bouee9, 20, arig_utils::GREEN, 1);
-    circle(output1, bouee5, 20, arig_utils::GREEN, 1);
-
-    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", output1);
-
-
-    // CALCUL PERSPECTIVE
-    Point2f ptsImages[] = {bouee9, bouee8, bouee5, bouee12};
-    Point2f ptsProj[] = {
-            arig_utils::tablePtToImagePt(Point(1270, 1200)),
-            arig_utils::tablePtToImagePt(Point(1730, 1200)),
-            arig_utils::tablePtToImagePt(Point(2330, 100)),
-            arig_utils::tablePtToImagePt(Point(670, 100)),
-    };
-
-    config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
-    config->perspectiveSize = Size(1500, 1100);
 
     Mat projected;
     warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
@@ -106,6 +68,67 @@ JsonResult Etalonnage::run(const Mat &source) {
     spdlog::debug("Etalonnage en {}ms", arig_utils::ellapsedTime(start));
 
     return r;
+}
+
+/**
+ * Calcul de la perspctive à partie des position des bouées
+ */
+bool Etalonnage::calculPerspective(const Mat &source, Mat &output, const Point &markerCenter) {
+    // extraction et égalisation du canal A en LAB
+    Mat lab;
+    Mat lab_planes[3];
+    Mat labA;
+
+    cvtColor(source, lab, COLOR_BGR2Lab);
+    split(lab, lab_planes);
+    createCLAHE(4, Size(8, 8))->apply(lab_planes[1], labA);
+
+    // détermination couleur bouées
+    Rect probeRed = arig_utils::getProbe(markerCenter + Point(-85, 0), config->probeSize);
+    Rect probeGreen = arig_utils::getProbe(markerCenter + Point(85, 0), config->probeSize);
+
+    double redLab = arig_utils::getAverageColor(labA, probeRed)[0];
+    double greenLab = arig_utils::getAverageColor(labA, probeGreen)[0];
+
+    vector<double> redRange = {redLab - 15, redLab + 15};
+    vector<double> greenRange = {greenLab - 15, greenLab + 15};
+
+    int offsetXMarker =  markerCenter.x - config->cameraResolution.width / 2;
+    vector<Point> detectionZone = config->getDetectionZone(offsetXMarker);
+
+    // recherche les bouées extremes
+    Point bouee8, bouee12, bouee5, bouee9;
+    if (!detectBouees(labA, output, markerCenter, greenRange, detectionZone, true, bouee8, bouee12) ||
+        !detectBouees(labA, output, markerCenter, redRange, detectionZone, false, bouee9, bouee5)) {
+        return false;
+    }
+
+    spdlog::debug("Bouee 8 : {}", bouee8);
+    spdlog::debug("Bouee 12 : {}", bouee12);
+    spdlog::debug("Bouee 9 : {}", bouee9);
+    spdlog::debug("Bouee 5 : {}", bouee5);
+
+    polylines(output, detectionZone, true, arig_utils::BLUE, 1);
+    circle(output, bouee8, 20, arig_utils::GREEN, 1);
+    circle(output, bouee12, 20, arig_utils::GREEN, 1);
+    circle(output, bouee9, 20, arig_utils::RED, 1);
+    circle(output, bouee5, 20, arig_utils::RED, 1);
+
+    imwrite(config->outputPrefix + "etallonage-" + to_string(index) + ".jpg", output);
+
+    // CALCUL PERSPECTIVE
+    Point2f ptsImages[] = {bouee9, bouee8, bouee5, bouee12};
+    Point2f ptsProj[] = {
+            arig_utils::tablePtToImagePt(Point(1730, 1200)),
+            arig_utils::tablePtToImagePt(Point(1270, 1200)),
+            arig_utils::tablePtToImagePt(Point(670, 100)),
+            arig_utils::tablePtToImagePt(Point(2330, 100)),
+    };
+
+    config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsProj);
+    config->perspectiveSize = Size(1500, 1100);
+
+    return true;
 }
 
 /**
@@ -222,14 +245,14 @@ bool Etalonnage::calibCouleursEcueil(const Mat &source, Mat &output) {
 /**
  * Fait une detection de couleur pour trouver les balises extrêmes
  */
-bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
-                              const vector<Scalar> &colorRange, const vector<Point> &zone, bool sideIsMinX,
+bool Etalonnage::detectBouees(const Mat &labA, Mat &output, const Point &markerCenter,
+                              const vector<double> &colorRange, const vector<Point> &detectionZone, bool sideIsMinX,
                               Point &boueeTop, Point &boueeSide) {
     Mat imageThreshold;
-    arig_utils::hsvInRange(imageHsv, colorRange, imageThreshold);
+    inRange(labA, max(0.0, colorRange[0]), min(255.0, colorRange[1]), imageThreshold);
+    erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 4);
+    dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 4);
     imwrite(config->outputPrefix + (sideIsMinX ? "thres-ver.jpg" : "thres-rouge.jpg"), imageThreshold);
-    erode(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
-    dilate(imageThreshold, imageThreshold, Mat(), Point(-1, -1), 2);
 
     vector<vector<Point>> contours;
     findContours(imageThreshold, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -237,8 +260,8 @@ bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
     // boueeTop : bouee de min Y
     // boueeSide : bouee de min/max X (selon sideIsMinX)
     vector<Point> contourBoueeTop, contourBoueeSide;
-    double minY = config->cameraResolution.width;
-    double minX = config->cameraResolution.height;
+    double minY = config->cameraResolution.height;
+    double minX = config->cameraResolution.width;
     double maxX = 0;
 
     for (auto i = 0; i < contours.size(); i++) {
@@ -253,7 +276,7 @@ bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
         double y = moment.m01 / area;
 
         // filtrage dans le polygone de recherche
-        if (pointPolygonTest(zone, Point(x, y), false) < 0) {
+        if (pointPolygonTest(detectionZone, Point(x, y), false) < 0) {
             continue;
         }
 
@@ -285,14 +308,14 @@ bool Etalonnage::detectBouees(const Mat &imageHsv, Mat &output,
     //      selon si la bouee est à droite ou gauche de l'image, respectivement
 
     boueeTop.x = arig_utils::averageX(arig_utils::pointsOfMaxY(contourBoueeTop));
-    if (contourBoueeTop.at(0).x > config->cameraResolution.width / 2.0) {
+    if (contourBoueeTop.at(0).x > markerCenter.x) {
         boueeTop.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeTop));
     } else {
         boueeTop.y = arig_utils::averageY(arig_utils::pointsOfMaxX(contourBoueeTop));
     }
 
     boueeSide.x = arig_utils::averageX(arig_utils::pointsOfMaxY(contourBoueeSide));
-    if (contourBoueeSide.at(0).x > config->cameraResolution.width / 2.0) {
+    if (contourBoueeSide.at(0).x > markerCenter.x) {
         boueeSide.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeSide));
     } else {
         boueeSide.y = arig_utils::averageY(arig_utils::pointsOfMinX(contourBoueeSide));

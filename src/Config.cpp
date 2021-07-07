@@ -92,12 +92,12 @@ vector<Scalar> Config::getGreenRange() const {
     };
 }
 
-vector<Point> Config::getDetectionZone() const {
+vector<Point> Config::getDetectionZone(int offsetXMarker) const {
     return {
-            Point(cameraResolution.width / 2 - 150, 100),
-            Point(cameraResolution.width / 2 + 150, 100),
-            Point(cameraResolution.width - 50, cameraResolution.height - 250),
-            Point(50, cameraResolution.height - 250),
+            Point(offsetXMarker + cameraResolution.width / 2 - 150, 100),
+            Point(offsetXMarker + cameraResolution.width / 2 + 150, 100),
+            Point(offsetXMarker + cameraResolution.width - 50, cameraResolution.height - 350),
+            Point(offsetXMarker + 50, cameraResolution.height - 350),
     };
 }
 

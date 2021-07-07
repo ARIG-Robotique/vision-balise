@@ -45,33 +45,79 @@ void runTest(Mat &source, const Config *config) {
         return;
     }
 
-    line(work,
-         Point(config->cameraResolution.width / 2, 0),
-         Point(config->cameraResolution.width / 2, config->cameraResolution.height),
-         Scalar(0, 0, 255)
-    );
-
-    vector<vector<Point>> detectionZone = {
-            {
-                    Point(config->cameraResolution.width / 2 - 150, 100),
-                    Point(config->cameraResolution.width / 2 + 150, 100),
-                    Point(config->cameraResolution.width - 50, config->cameraResolution.height - 250),
-                    Point(50, config->cameraResolution.height - 250),
-            }
-    };
-
-    drawContours(work, detectionZone, 0, Scalar(0, 255, 0));
-
     // x=1500 y=1200
     Point2f markerCenter(
             (marker42.at(0).x + marker42.at(1).x) / 2.0,
             (marker42.at(0).y + marker42.at(1).y) / 2.0
     );
 
+    line(work,
+         Point(config->cameraResolution.width / 2, 0),
+         Point(config->cameraResolution.width / 2, config->cameraResolution.height),
+         Scalar(0, 0, 255)
+    );
+
+    int offsetXMarker =  markerCenter.x - config->cameraResolution.width / 2;
+    vector<vector<Point>> detectionZone = {
+            {
+                    Point(offsetXMarker + config->cameraResolution.width / 2 - 150, 100),
+                    Point(offsetXMarker + config->cameraResolution.width / 2 + 150, 100),
+                    Point(offsetXMarker + config->cameraResolution.width - 50, config->cameraResolution.height - 250),
+                    Point(offsetXMarker + 50, config->cameraResolution.height - 250),
+            }
+    };
+
+    drawContours(work, detectionZone, 0, Scalar(0, 255, 0));
+
     string team = markerCenter.x > config->cameraResolution.width / 2.0 ? TEAM_BLEU : TEAM_JAUNE;
     spdlog::debug("Coté {}", team == TEAM_BLEU ? "BLEU" : "JAUNE");
 
     show(work, debugAll);
+
+    // IMAGE LAB
+//    Mat lab;
+//    cvtColor(undistorted, lab, COLOR_BGR2Lab);
+//
+//    Mat lab_planes[3];
+//    split(lab, lab_planes);
+//
+//    Mat labA = lab_planes[1];
+//    auto clahe = createCLAHE(4, Size(8, 8));
+//    clahe->apply(lab_planes[1], labA);
+//
+//    Mat workLab = labA.clone();
+//
+//    // CALIBRATION COULEUR
+//    Point2f bouee9Temp = markerCenter + Point2f(-85, 0);
+//    Point2f bouee8Temp = markerCenter + Point2f(85, 0);
+//
+//    Rect probeRed = arig_utils::getProbe(bouee9Temp, 15);
+//    rectangle(workLab, probeRed.tl(), probeRed.br(), Scalar(255, 255, 255));
+//
+//    Rect probeGreen = arig_utils::getProbe(bouee8Temp, 15);
+//    rectangle(workLab, probeGreen.tl(), probeGreen.br(), Scalar(255, 255, 255));
+//
+//    Scalar redLab = arig_utils::getAverageColor(labA, probeRed);
+//    Scalar greenLab = arig_utils::getAverageColor(labA, probeGreen);
+//
+//    spdlog::debug("Rouge {}", redLab[0]);
+//    spdlog::debug("Vert {}", greenLab[0]);
+//
+//    show(workLab, true);
+//
+//    Mat thresholdLab;
+//
+//    inRange(labA, max(0.0, redLab[0] - 15), min(255.0, redLab[0] + 15), thresholdLab);
+//    dilate(thresholdLab, thresholdLab, Mat(), Point(-1, -1), 2);
+//    erode(thresholdLab, thresholdLab, Mat(), Point(-1, -1), 2);
+//
+//    show(thresholdLab, true);
+//
+//    inRange(labA, max(0.0, greenLab[0] - 15), min(255.0, greenLab[0] + 15), thresholdLab);
+//    dilate(thresholdLab, thresholdLab, Mat(), Point(-1, -1), 2);
+//    erode(thresholdLab, thresholdLab, Mat(), Point(-1, -1), 2);
+//
+//    show(thresholdLab, true);
 
     // CALIBRATION COULEUR
     Point2f bouee9Temp = markerCenter + Point2f(-85, 0);
@@ -119,8 +165,8 @@ void runTest(Mat &source, const Config *config) {
     // S +- 75
     // V +- 50
     vector<Scalar> greenRange = {
-            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 50, 0.0)),
-            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 50, 255.0))
+            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 100, 0.0)),
+            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 100, 255.0))
     };
 
     // RED

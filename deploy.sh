@@ -10,6 +10,7 @@ echo "Compilation ..."
 echo "Nettoyage des dossiers"
 ssh $ROBOT_HOST mkdir -p $INSTALL_DIR
 ssh $ROBOT_HOST rm -vf $INSTALL_DIR/*
+ssh $ROBOT_HOST sudo systemctl stop $ROBOT_NAME.service
 
 echo "Déploiement Applicatif ..."
 scp ./build-pi/bin/vision_balise $ROBOT_HOST:$INSTALL_DIR/
@@ -24,3 +25,4 @@ ssh $ROBOT_HOST sudo mv $INSTALL_DIR/$ROBOT_NAME-shutdown.service /lib/systemd/s
 ssh $ROBOT_HOST sudo systemctl daemon-reload
 ssh $ROBOT_HOST sudo systemctl enable $ROBOT_NAME.service
 ssh $ROBOT_HOST sudo systemctl enable $ROBOT_NAME-shutdown.service
+ssh $ROBOT_HOST sudo systemctl start $ROBOT_NAME.service

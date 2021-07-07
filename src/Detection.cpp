@@ -85,7 +85,7 @@ json Detection::run(const Mat &source) {
  */
 bool Detection::lectureGirouette(const Mat &imageHsv, Mat &output, vector<string> &girouette) {
     auto probe = arig_utils::getProbe(
-            arig_utils::tablePtToImagePt(Point(1500, 20)),
+            arig_utils::tablePtToImagePt(Point(1500, 25)),
             config->probeSize
     );
     auto color = arig_utils::getAverageColor(imageHsv, probe);
