@@ -27,23 +27,14 @@ public:
     bool swapRgb;
     bool undistort;
     int probeSize;
-    int colorThreshold;
-    int detectionBuffer;
-    int detectionValidLimit;
     int idleDelay;
     int detectionDelay;
 
     // from etalonnage
     bool etalonnageDone = false;
     String team = TEAM_UNKNOWN;
-    Scalar red, green;
-    Scalar redEcueil, greenEcueil;
     Mat perspectiveMap;
     Size perspectiveSize;
-
-    vector<Scalar> getRedRange() const;
-    vector<Scalar> getGreenRange() const;
-    vector<Point> getDetectionZone(int offsetXMarker) const;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);
@@ -51,6 +42,5 @@ public:
     void reset();
 
 };
-
 
 #endif //VISION_BALISE_CONFIG_H

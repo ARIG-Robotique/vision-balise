@@ -192,66 +192,6 @@ void Screen::showInfo(const string &line1, const string &line2) {
 void Screen::showDetection(const json &detectionResult) {
     display->setFrom(frame);
 
-    if (!detectionResult["girouette"].empty()) {
-        string girouette =
-                detectionResult["girouette"] == DIR_UP ? "N" : detectionResult["girouette"] == DIR_DOWN ? "S" : "?";
-        SSD1306::drawString8x12(SSD1306::OledPoint(64 - 4, 36),
-                                girouette,
-                                SSD1306::PixelStyle::Set,
-                                *display);
-    }
-
-    if (!detectionResult["ecueilEquipe"].empty() && !detectionResult["ecueilAdverse"].empty()) {
-        string ecueilGauche;
-        string ecueilDroit;
-        for (const auto &item : detectionResult["ecueilEquipe"]) {
-            if (config->team == TEAM_BLEU) {
-                ecueilDroit += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
-            } else {
-                ecueilGauche += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
-            }
-        }
-        for (const auto &item : detectionResult["ecueilAdverse"]) {
-            if (config->team == TEAM_BLEU) {
-                ecueilGauche += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
-            } else {
-                ecueilDroit += item == COLOR_RED ? "R" : item == COLOR_GREEN ? "G" : "?";
-            }
-        }
-        reverse(ecueilGauche.begin(), ecueilGauche.end());
-
-        SSD1306::drawString8x12(SSD1306::OledPoint(64 + 10, 50),
-                                ecueilDroit,
-                                SSD1306::PixelStyle::Set,
-                                *display);
-        SSD1306::drawString8x12(SSD1306::OledPoint(64 - 10 - 5 * 8, 50),
-                                ecueilGauche,
-                                SSD1306::PixelStyle::Set,
-                                *display);
-    }
-
-    if (!detectionResult["bouees"].empty()) {
-        vector<SSD1306::OledPoint> positions = {
-                SSD1306::OledPoint(30 - 4, 40),
-                SSD1306::OledPoint(40 - 4, 30),
-                SSD1306::OledPoint(50 - 4, 20),
-                SSD1306::OledPoint(58 - 4, 10),
-                SSD1306::OledPoint(70 - 4, 10),
-                SSD1306::OledPoint(78 - 4, 20),
-                SSD1306::OledPoint(88 - 4, 30),
-                SSD1306::OledPoint(98 - 4, 40),
-        };
-
-        short i = 0;
-        for (const auto &item : positions) {
-            if (detectionResult["bouees"][i++] == BOUE_PRESENT) {
-                display->setFrom(bulletFull, item);
-            } else {
-                display->setFrom(bulletEmpty, item);
-            }
-        }
-    }
-
     SSD1306::drawString8x8(SSD1306::OledPoint(2, 2),
                             getSystemTemp(),
                             SSD1306::PixelStyle::Set,

@@ -24,9 +24,6 @@ bool Config::readConfigFile(const String &filename) {
     fs["swapRgb"] >> swapRgb;
     fs["undistort"] >> undistort;
     fs["probeSize"] >> probeSize;
-    fs["colorThreshold"] >> colorThreshold;
-    fs["detectionBuffer"] >> detectionBuffer;
-    fs["detectionValidLimit"] >> detectionValidLimit;
     fs["idleDelay"] >> idleDelay;
     fs["detectionDelay"] >> detectionDelay;
 
@@ -64,48 +61,7 @@ bool Config::readCalibrationFile(const String &filename) {
     return true;
 }
 
-// H +- 10
-// S +- 75
-// V +- 100
-vector<Scalar> Config::getRedRange() const {
-    auto hMin = red[0] - 10;
-    if (hMin < 0) {
-        hMin += 180;
-    }
-    auto hMax = red[0] + 10;
-    if (hMax > 180) {
-        hMax -= 180;
-    }
-    return {
-            Scalar(hMin, max(red[1] - 75, 0.0), max(red[2] - 100, 0.0)),
-            Scalar(hMax, min(red[1] + 75, 255.0), min(red[2] + 100, 255.0)),
-    };
-}
-
-// H +- 10
-// S +- 75
-// V +- 50
-vector<Scalar> Config::getGreenRange() const {
-    return {
-            Scalar(green[0] - 10, max(green[1] - 75, 0.0), max(green[2] - 100, 0.0)),
-            Scalar(green[0] + 10, min(green[1] + 75, 255.0), min(green[2] + 100, 255.0))
-    };
-}
-
-vector<Point> Config::getDetectionZone(int offsetXMarker) const {
-    return {
-            Point(offsetXMarker + cameraResolution.width / 2 - 150, 100),
-            Point(offsetXMarker + cameraResolution.width / 2 + 150, 100),
-            Point(offsetXMarker + cameraResolution.width - 50, cameraResolution.height - 350),
-            Point(offsetXMarker + 50, cameraResolution.height - 350),
-    };
-}
-
 void Config::reset() {
     etalonnageDone = false;
     team = TEAM_UNKNOWN;
-    red = Scalar();
-    green = Scalar();
-    redEcueil = Scalar();
-    greenEcueil = Scalar();
 }

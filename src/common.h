@@ -29,18 +29,11 @@ using json = nlohmann::json;
 
 #define COLOR_RED "RED"
 #define COLOR_GREEN "GREEN"
-#define COLOR_UNKNOWN "UNKNOWN"
+#define COLOR_BLUE "BLUE"
 
-#define TEAM_BLEU "BLEU"
+#define TEAM_VIOLET "VIOLET"
 #define TEAM_JAUNE "JAUNE"
 #define TEAM_UNKNOWN "UNKNOWN"
-
-#define DIR_UP "UP"
-#define DIR_DOWN "DOWN"
-#define DIR_UNKNOWN "UNKNOWN"
-
-#define BOUE_PRESENT "PRESENT"
-#define BOUE_ABSENT "ABSENT"
 
 struct JsonResult {
     string status;

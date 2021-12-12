@@ -18,15 +18,6 @@ undistort: 1
 # largeur des sondes de couleur en pixels
 probeSize: 15
 
-# Seuil de détection de couleurs
-colorThreshold: 8
-
-# Nombre de valeurs de détection pour moyenner
-detectionBuffer: 4
-
-# Nombre de valeurs identiques minimum pour valider la détection
-detectionValidLimit: 3
-
 # Délai entre chaque prise de photo
 idleDelay: 1000
 
