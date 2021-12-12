@@ -187,6 +187,23 @@ namespace arig_utils {
         return result;
     }
 
+    vector<Point> pointsOfMinY(const vector<Point> &points) {
+        vector<Point> result;
+        int minY = 0;
+
+        for (auto &point : points) {
+            if (point.y < minY) {
+                result.clear();
+                minY = point.y;
+            }
+            if (point.y == minY) {
+                result.emplace_back(point);
+            }
+        }
+
+        return result;
+    }
+
     double averageX(const vector<Point> &points) {
         double sum = 0;
 

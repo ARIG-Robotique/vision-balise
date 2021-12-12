@@ -46,6 +46,8 @@ namespace arig_utils {
 
     vector<Point> pointsOfMaxY(const vector<Point> &points);
 
+    vector<Point> pointsOfMinY(const vector<Point> &points);
+
     double averageX(const vector<Point> &points);
 
     double averageY(const vector<Point> &points);
