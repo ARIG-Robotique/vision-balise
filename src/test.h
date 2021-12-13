@@ -5,34 +5,39 @@
 #include "utils.h"
 #include "Config.h"
 
-void show(Mat &mat, bool ok) {
-    if (ok) {
+int i = 0;
+
+void show(Mat &mat, bool show, const Config *config) {
+    imwrite(config->outputPrefix + "test-" + to_string(i++) + ".jpg", mat);
+    if (show) {
         imshow("debug", mat);
         waitKey(0);
     }
 }
 
 void runTest(Mat &source, const Config *config) {
-    bool debugAll = false;
+    bool debugAll = true;
 
-    show(source, debugAll);
+    show(source, debugAll, config);
 
     // correction objectif
-    Mat undistorted;
-    remap(source, undistorted, config->remap1, config->remap2, INTER_LINEAR);
+    Mat undistorted = source.clone();
+//    remap(source, undistorted, config->remap1, config->remap2, INTER_LINEAR);
 
-    show(undistorted, debugAll);
+//    show(undistorted, debugAll);
 
     // détection des marqueurs
     Mat output = undistorted.clone();
 
     vector<int> markerIds;
-    vector<vector<Point2f>> markerCorners;
+    vector<vector<Point2f>> markerCorners, rejectedCandidates;
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
-    aruco::detectMarkers(undistorted, dictionary, markerCorners, markerIds);
+    Ptr<aruco::DetectorParameters> parameters = aruco::DetectorParameters::create();
+    aruco::detectMarkers(undistorted, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
     aruco::drawDetectedMarkers(output, markerCorners, markerIds);
+    aruco::drawDetectedMarkers(output, rejectedCandidates);
 
-    show(output, debugAll);
+    show(output, debugAll, config);
 
     // on cherche le marqueur 42 et les marqueurs 17
     vector<Point> marker42;
@@ -41,14 +46,14 @@ void runTest(Mat &source, const Config *config) {
     for (auto i = 0; i < markerIds.size(); i++) {
         auto marker = markerCorners.at(i);
         if (markerIds.at(i) == 42) {
-            marker42.emplace_back(Point(
-                    (marker.at(0).x + marker.at(1).x) / 2.0,
-                    (marker.at(0).y + marker.at(1).y) / 2.0
+            marker42.push_back(Point(
+                    (marker.at(0).x + marker.at(2).x) / 2.0,
+                    (marker.at(0).y + marker.at(2).y) / 2.0
             ));
         } else if (markerIds.at(i) == 17) {
-            markers17.emplace_back(Point(
-                    (marker.at(0).x + marker.at(1).x) / 2.0,
-                    (marker.at(0).y + marker.at(1).y) / 2.0
+            markers17.push_back(Point(
+                    (marker.at(0).x + marker.at(2).x) / 2.0,
+                    (marker.at(0).y + marker.at(2).y) / 2.0
             ));
         }
     }
@@ -67,7 +72,7 @@ void runTest(Mat &source, const Config *config) {
         for (auto &cluster : clusters) {
             for (const auto &otherMarker : cluster) {
                 if (cv::norm(otherMarker - marker) < seuilDistance) {
-                    cluster.emplace_back(marker);
+                    cluster.push_back(marker);
                     markerClustered = true;
                     break;
                 }
@@ -79,8 +84,8 @@ void runTest(Mat &source, const Config *config) {
 
         if (!markerClustered) {
             vector<Point> newCluster;
-            newCluster.emplace_back(marker);
-            clusters.emplace_back(newCluster);
+            newCluster.push_back(marker);
+            clusters.push_back(newCluster);
         }
     }
 
@@ -88,25 +93,25 @@ void runTest(Mat &source, const Config *config) {
 
     for (int i = 0; i < clusters.size(); i++) {
         for (auto const &marker : clusters.at(i)) {
-            circle(work, marker, 5, Scalar(0, 0, 255), 1);
-            putText(work, to_string(i), marker + Point(10, 10), 0, 0.5, Scalar(0, 0, 0), 1);
+            putText(work, to_string(i), marker, 0, 0.5, Scalar(0, 0, 0), 3);
+            putText(work, to_string(i), marker, 0, 0.5, Scalar(0, 0, 255), 1);
         }
     }
 
-    show(work, debugAll);
+    show(work, debugAll, config);
 
     // détermine la correspondance de chaque marqueur
-    vector<Point> ptsImages;
-    vector<Point> ptsTable;
+    vector<Point2f> ptsImages;
+    vector<Point2f> ptsTable;
 
-    ptsImages.emplace_back(marker42.at(0));
-    ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(1500, 1250)));
+//    ptsImages.push_back(marker42.at(0));
+//    ptsTable.push_back(arig_utils::tablePtToImagePt(Point(1500, 1250)));
 
-    bool foundAbriViolet, foundAbriJaune, foundZoneViolet, foundZoneJaune;
+    bool foundAbriViolet = false, foundAbriJaune = false, foundZoneViolet = false, foundZoneJaune = false;
 
     for (const auto &cluster : clusters) {
         if (cluster.size() == 3) { // un des "triangles"
-            if (cluster.at(0).x < config->cameraResolution.width / 2) { // coté violet
+            if (cluster.at(0).x < config->cameraResolution.width / 2.0) { // coté violet
                 if (foundZoneViolet) {
                     spdlog::warn("Deux zones de fouille violet trouvée");
                     return;
@@ -117,13 +122,13 @@ void runTest(Mat &source, const Config *config) {
                 auto middle = arig_utils::pointsOfMinX(cluster);
                 auto bottom = arig_utils::pointsOfMaxY(cluster);
 
-                ptsImages.emplace_back(top.at(0));
-                ptsImages.emplace_back(middle.at(0));
-                ptsImages.emplace_back(bottom.at(0));
+                ptsImages.push_back(top.at(0));
+//                ptsImages.push_back(middle.at(0));
+                ptsImages.push_back(bottom.at(0));
 
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(2100, 795)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(2170, 675)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(2100, 555)));
+                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(2100, 795)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(2170, 675)));
+                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(2100, 555)));
 
             } else { // coté jaune
                 if (foundZoneJaune) {
@@ -136,16 +141,16 @@ void runTest(Mat &source, const Config *config) {
                 auto middle = arig_utils::pointsOfMaxX(cluster);
                 auto bottom = arig_utils::pointsOfMaxY(cluster);
 
-                ptsImages.emplace_back(top.at(0));
-                ptsImages.emplace_back(middle.at(0));
-                ptsImages.emplace_back(bottom.at(0));
+                ptsImages.push_back(top.at(0));
+//                ptsImages.push_back(middle.at(0));
+                ptsImages.push_back(bottom.at(0));
 
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(900, 795)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(830, 675)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(900, 555)));
+                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(900, 795)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(830, 675)));
+                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(900, 555)));
             }
 
-        } else if (cluster.size() == 2) {
+        } else if (cluster.size() == 2) { // un des abris
             if (cluster.at(0).x < config->cameraResolution.width / 2) { // coté violet
                 if (foundAbriViolet) {
                     spdlog::warn("Deux abris de chantier violet trouvé");
@@ -156,11 +161,11 @@ void runTest(Mat &source, const Config *config) {
                 auto gauche = arig_utils::pointsOfMinX(cluster);
                 auto droite = arig_utils::pointsOfMaxX(cluster);
 
-                ptsImages.emplace_back(gauche.at(0));
-                ptsImages.emplace_back(droite.at(0));
+//                ptsImages.push_back(gauche.at(0));
+//                ptsImages.push_back(droite.at(0));
 
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(2879, 1688)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(2688, 1879)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(2879, 1688)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(2688, 1879)));
 
             } else { // coté jaune
                 if (foundAbriJaune) {
@@ -172,16 +177,16 @@ void runTest(Mat &source, const Config *config) {
                 auto gauche = arig_utils::pointsOfMinX(cluster);
                 auto droite = arig_utils::pointsOfMaxX(cluster);
 
-                ptsImages.emplace_back(gauche.at(0));
-                ptsImages.emplace_back(droite.at(0));
+//                ptsImages.push_back(gauche.at(0));
+//                ptsImages.push_back(droite.at(0));
 
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(312, 1879)));
-                ptsTable.emplace_back(arig_utils::tablePtToImagePt(Point(121, 1688)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(312, 1879)));
+//                ptsTable.push_back(arig_utils::tablePtToImagePt(Point(121, 1688)));
             }
         }
     }
 
-    if (!foundAbriJaune || !foundAbriViolet || !foundZoneJaune || !foundZoneViolet) {
+    if (/*!foundAbriJaune || !foundAbriViolet ||*/ !foundZoneJaune || !foundZoneViolet) {
         spdlog::warn("Toutes les zones n'ont pas été trouvées");
         return;
     }
@@ -192,7 +197,7 @@ void runTest(Mat &source, const Config *config) {
     Mat projected;
     warpPerspective(undistorted, projected, proj, Size(1500, 1100));
 
-    show(projected, debugAll);
+    show(projected, debugAll, config);
 }
 
 #endif //VISION_BALISE_TEST_H

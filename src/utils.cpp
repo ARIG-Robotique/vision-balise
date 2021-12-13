@@ -189,7 +189,7 @@ namespace arig_utils {
 
     vector<Point> pointsOfMinY(const vector<Point> &points) {
         vector<Point> result;
-        int minY = 0;
+        int minY = 9999999;
 
         for (auto &point : points) {
             if (point.y < minY) {
