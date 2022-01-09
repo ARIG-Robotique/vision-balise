@@ -27,9 +27,13 @@ using json = nlohmann::json;
 #define ACTION_DETECTION "DETECTION"
 #define ACTION_ETALONNAGE "ETALONNAGE"
 
+#define STATUS_PRESENT "PRESENT"
+#define STATUS_ABSENT "ABSENT"
+
 #define COLOR_RED "RED"
 #define COLOR_GREEN "GREEN"
 #define COLOR_BLUE "BLUE"
+#define COLOR_ROCK "ROCK"
 
 #define TEAM_VIOLET "VIOLET"
 #define TEAM_JAUNE "JAUNE"

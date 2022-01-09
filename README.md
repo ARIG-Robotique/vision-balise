@@ -59,21 +59,17 @@ $ sudo modprobe bcm2835-v4l2
   "data": {
     "etalonnageDone": true,
     "detection": {
-      "girouette": "UP",
-      "ecueilEquipe": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
-      "ecueilAdverse": ["GREEN", "RED", "UNKNOWN", "GREEN", "RED"],
-      "bouees": ["PRESENT", "ABSENT", "6 more ..."],
-      "hautFond": [
-        {"col": "RED", "pos": [1200, 800]},
-        {"col": "GREEN", "pos": [1500, 850]}
+      "distribs": ["PRESENT", "ABSENT"],
+      "echantillons": [
+        {"col": "RED", "pos": [1500, 850]},
+        {"col": "GREEN", "pos": [1500, 850]},
+        {"col": "BLUE", "pos": [1500, 850]},
+        {"col": "ROCK", "pos": [1500, 850]}
       ]
     }
   }
 }
 ```
-
-Les directions possibles sont `UP`, `DOWN` et `UNKNOWN`.  
-Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
 
 ### Lancer l'étalonnage
 
@@ -88,6 +84,21 @@ Les couleurs possibles sont `RED`, `GREEN` et `UNKNOWN`.
   "status": "OK",
   "action": "ETALONNAGE",
   "data": "......base64....."
+}
+```
+
+### Valider l'étalonnage
+
+* Query
+```json
+{"action": "CONFIRM_ETALONNAGE"}
+```
+
+* Réponse
+```json
+{
+ "status": "OK",
+ "action": "CONFIRM_ETALONNAGE"
 }
 ```
 
