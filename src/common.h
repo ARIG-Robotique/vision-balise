@@ -2,7 +2,7 @@
 #define VISION_BALISE_COMMON_H
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "opencv2/opencv.hpp"
 #include "opencv2/aruco.hpp"
 #include "json.hpp"
@@ -47,6 +47,7 @@ struct JsonResult {
 };
 
 struct JsonQuery {
+    int socket;
     string action;
     json data;
 };

@@ -3,7 +3,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "common.h"
 #include "Calibration.h"
-#include "SocketHelper.h"
+#include "MultiSocketHelper.h"
 #include "ProcessThread.h"
 #include "test.h"
 
@@ -111,24 +111,18 @@ int main(int argc, char **argv) {
     }
 
     // ouverture de la socket
-    SocketHelper socket(parser.get<string>("socket-type"));
-    if (socket.isUnknown()) {
-        spdlog::error("Invalid socket type");
-        processThread.exit();
+    if (parser.get<string>("socket-type") != "inet") {
+        spdlog::error("Seule les socket INET sont supportées");
         return 2;
-
-    } else if (socket.isInet()) {
-        socket.setPort(parser.get<int>("socket-port"));
-
-    } else if (socket.isUnix()) {
-        socket.setSocketFile(parser.get<string>("socket-file"));
     }
+
+    MultiSocketHelper socket(parser.get<int>("socket-port"));
 
     socket.init();
     processThread.setIdle();
 
     // boucle de commande
-    bool stop = false, waitConnection = true;
+    bool stop = false;
 
     shutdown_handler = [&](int v) mutable {
         processThread.exit();
@@ -140,16 +134,9 @@ int main(int argc, char **argv) {
     });
 
     while (!stop) {
-        if (waitConnection) {
-            spdlog::debug("Attente de connexion client ...");
-            socket.waitConnection();
-            waitConnection = false;
-        }
-
-        JsonQuery query = socket.getQuery();
+        JsonQuery query = socket.waitQuery();
         if (query.action == DATA_INVALID) {
-            spdlog::warn("Données invalide, la socket client est fermé ?");
-            waitConnection = true;
+            spdlog::warn("Données invalides");
             continue;
         }
 
@@ -185,7 +172,7 @@ int main(int argc, char **argv) {
         }
 
         result.action = query.action;
-        socket.sendResponse(result);
+        socket.sendResponse(query.socket, result);
     }
 
     processThread.exit();

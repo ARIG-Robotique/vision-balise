@@ -6,6 +6,8 @@
 Ce projet ouvre un socket TCP sur le port 9042 afin de recevoir des ordres
 JSON pour piloter la récupération des information avec [OpenCV](https://opencv.org/)
 
+Jusqu'à deux clients peuvent se connecter en même temps.
+
 Rendre la camera accessible par OpenCV :
 ```bash
 $ sudo modprobe bcm2835-v4l2
