@@ -162,6 +162,9 @@ int main(int argc, char **argv) {
         } else if (query.action == ACTION_ETALONNAGE) {
             result = processThread.startEtalonnage();
 
+        } else if (query.action == ACTION_CONFIRM) {
+            result = processThread.confirmEtalonnage();
+
         } else if (query.action == ACTION_DETECTION) {
             result = processThread.startDetection();
 

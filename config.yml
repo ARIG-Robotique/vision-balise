@@ -23,3 +23,6 @@ idleDelay: 1000
 
 # Délai entre chaque détection
 detectionDelay: 500
+
+# Distance en pixels pour le clustering
+seuilCluster: 100

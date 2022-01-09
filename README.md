@@ -60,6 +60,7 @@ $ sudo modprobe bcm2835-v4l2
   "action": "STATUS",
   "data": {
     "etalonnageDone": true,
+    "etalonnageConfirmed": true,
     "detection": {
       "distribs": ["PRESENT", "ABSENT"],
       "echantillons": [
@@ -93,14 +94,14 @@ $ sudo modprobe bcm2835-v4l2
 
 * Query
 ```json
-{"action": "CONFIRM_ETALONNAGE"}
+{"action": "CONFIRM"}
 ```
 
 * Réponse
 ```json
 {
  "status": "OK",
- "action": "CONFIRM_ETALONNAGE"
+ "action": "CONFIRM"
 }
 ```
 

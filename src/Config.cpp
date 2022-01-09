@@ -27,6 +27,8 @@ bool Config::readConfigFile(const String &filename) {
     fs["idleDelay"] >> idleDelay;
     fs["detectionDelay"] >> detectionDelay;
 
+    fs["seuilCluster"] >> seuilCluster;
+
     return true;
 }
 

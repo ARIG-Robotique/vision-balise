@@ -142,6 +142,8 @@ JsonQuery MultiSocketHelper::waitQuery() {
             int sd = client_sockets[i];
 
             if (FD_ISSET(sd, &readfds)) {
+                bzero(buffer, 256);
+
                 //Check if it was for closing, and also read the incoming message
                 if (read(sd, buffer, 255) == 0) {
                     //Somebody disconnected, get his details and print

@@ -17,6 +17,9 @@ public:
 
 private:
 
+    bool detectMarkers(const Mat &source, Mat &output, Point &markerCenter, vector<Point> &markersEchantillons);
+    void getClusters(Mat &output, const vector<Point> &markers, vector<vector<Point>> &clusters);
+    bool detectPerspectivePoints(const vector<vector<Point>> &clusters, vector<Point2f> &ptsImages, vector<Point2f> &ptsTable);
 };
 
 #endif //VISION_BALISE_ETALONNAGE_H

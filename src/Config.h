@@ -30,8 +30,11 @@ public:
     int idleDelay;
     int detectionDelay;
 
+    int seuilCluster;
+
     // from etalonnage
     bool etalonnageDone = false;
+    bool etalonnageConfirmed = false;
     String team = TEAM_UNKNOWN;
     Mat perspectiveMap;
     Size perspectiveSize;
