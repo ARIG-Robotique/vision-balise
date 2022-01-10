@@ -64,10 +64,10 @@ $ sudo modprobe bcm2835-v4l2
     "detection": {
       "distribs": ["PRESENT", "ABSENT"],
       "echantillons": [
-        {"col": "RED", "pos": [1500, 850]},
-        {"col": "GREEN", "pos": [1500, 850]},
-        {"col": "BLUE", "pos": [1500, 850]},
-        {"col": "ROCK", "pos": [1500, 850]}
+        {"c": "RED", "x": 1500, "y": 850},
+        {"c": "GREEN", "x": 1500, "y": 850},
+        {"c": "BLUE", "x": 1500, "y": 850},
+        {"c": "ROCK", "x": 1500, "y": 850}
       ]
     }
   }
