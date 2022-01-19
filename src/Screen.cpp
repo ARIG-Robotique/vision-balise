@@ -146,6 +146,13 @@ const SSD1306::OledBitmap<128, 64> logo{
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0xff, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+const map<string, string> CODES = {
+        {COLOR_RED, "R"},
+        {COLOR_BLUE, "B"},
+        {COLOR_GREEN, "G"},
+        {COLOR_ROCK, "?"}
+};
+
 String getSystemTemp() {
 #ifdef PI
     return arig_utils::exec("vcgencmd measure_temp | cut -d'=' -f2");
@@ -192,15 +199,56 @@ void Screen::showInfo(const string &line1, const string &line2) {
 void Screen::showDetection(const json &detectionResult) {
     display->setFrom(frame);
 
+    // info
     SSD1306::drawString8x8(SSD1306::OledPoint(2, 2),
-                            getSystemTemp(),
-                            SSD1306::PixelStyle::Set,
-                            *display);
+                           getSystemTemp(),
+                           SSD1306::PixelStyle::Set,
+                           *display);
 
-    SSD1306::drawString8x12(SSD1306::OledPoint(125 - 5 * 8, 2),
-                            config->team,
-                            SSD1306::PixelStyle::Set,
-                            *display);
+    SSD1306::drawString8x8(SSD1306::OledPoint(125 - (config->team.size()) * 8, 2),
+                           config->team,
+                           SSD1306::PixelStyle::Set,
+                           *display);
+
+    // echantillons
+    for (auto &e: detectionResult["echantillons"]) {
+        auto point = SSD1306::OledPoint(
+                128 - e["x"].get<int>() / 3000.0 * 128 - 4,
+                64 - e["y"].get<int>() / 2000.0 * (64 - 8) - 4
+        );
+
+//        display->setFrom(bulletFull, point);
+        SSD1306::drawString8x8(point,
+                               CODES.at(e["c"].get<string>()),
+                               SSD1306::PixelStyle::Set,
+                               *display);
+    }
+
+    // distributeurs
+    int distribSize = 9;
+    if (detectionResult["distribs"][0] == STATUS_ABSENT) {
+        SSD1306::box(SSD1306::OledPoint(64 + 4, 64 - 1 - distribSize),
+                     SSD1306::OledPoint(64 + 4 + distribSize, 64 - 1),
+                     SSD1306::PixelStyle::Set,
+                     *display);
+    } else {
+        SSD1306::boxFilled(SSD1306::OledPoint(64 + 4, 64 - 1 - distribSize),
+                           SSD1306::OledPoint(64 + 4 + distribSize, 64 - 1),
+                           SSD1306::PixelStyle::Set,
+                           *display);
+    }
+
+    if (detectionResult["distribs"][1] == STATUS_ABSENT) {
+        SSD1306::box(SSD1306::OledPoint(64 - 4 - distribSize, 64 - 1 - distribSize),
+                     SSD1306::OledPoint(64 - 4, 64 - 1),
+                     SSD1306::PixelStyle::Set,
+                     *display);
+    } else {
+        SSD1306::boxFilled(SSD1306::OledPoint(64 - 4 - distribSize, 64 - 1 - distribSize),
+                           SSD1306::OledPoint(64 - 4, 64 - 1),
+                           SSD1306::PixelStyle::Set,
+                           *display);
+    }
 
     update();
 }

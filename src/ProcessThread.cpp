@@ -334,10 +334,12 @@ void ProcessThread::updateScreen() {
         m_screen->clear();
 
     } else if (m_action == ACTION_IDLE) {
-        if (m_config->etalonnageDone) {
+        if (m_config->etalonnageConfirmed) {
             m_screen->showInfo("Etalonnage OK", "Team:" + m_config->team);
+        } else if (m_config->etalonnageDone) {
+            m_screen->showInfo("Etalonnage done", "Team:" + m_config->team);
         } else {
-            m_screen->showInfo("En attente", "Etalonnage KO");
+            m_screen->showLogo();
         }
 
     } else if (m_action == ACTION_DETECTION) {
