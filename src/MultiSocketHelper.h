@@ -14,7 +14,7 @@ private:
     int* client_sockets;
 
 public:
-    MultiSocketHelper(unsigned short port = 8686, unsigned short max_clients = 2);
+    MultiSocketHelper(unsigned short port = 8686, unsigned short max_clients = 4);
     ~MultiSocketHelper();
 
     void init();

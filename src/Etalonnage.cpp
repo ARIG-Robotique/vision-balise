@@ -9,7 +9,7 @@ JsonResult Etalonnage::run(const Mat &source) {
     auto start = arig_utils::startTiming();
     spdlog::info("ETALONNAGE {}", ++index);
 
-    Mat output = source.clone();
+    auto output = source.clone();
     JsonResult r;
 
     Point markerCenter;
@@ -26,6 +26,7 @@ JsonResult Etalonnage::run(const Mat &source) {
     vector<Point2f> ptsImages;
     vector<Point2f> ptsTable;
     if (!detectPerspectivePoints(clusters, ptsImages, ptsTable)) {
+        imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", output);
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de calculer la perspective";
         return r;
@@ -33,14 +34,13 @@ JsonResult Etalonnage::run(const Mat &source) {
 
     config->perspectiveMap = getPerspectiveTransform(ptsImages, ptsTable);
     config->perspectiveSize = Size(1500, 1000);
+    config->etalonnageDone = true;
 
     Mat projected;
     warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
 
     r.status = RESPONSE_OK;
     r.data = arig_utils::matToBase64(projected);
-
-    config->etalonnageDone = true;
 
     imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", output);
 
@@ -53,8 +53,8 @@ bool Etalonnage::detectMarkers(const Mat &source, Mat &output, Point &markerCent
 
     vector<int> markerIds;
     vector<vector<Point2f>> markerCorners, rejectedCandidates;
-    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
-    Ptr<aruco::DetectorParameters> parameters = aruco::DetectorParameters::create();
+    auto dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+    auto parameters = aruco::DetectorParameters::create();
     aruco::detectMarkers(source, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
 
     aruco::drawDetectedMarkers(output, markerCorners, markerIds);
@@ -62,14 +62,15 @@ bool Etalonnage::detectMarkers(const Mat &source, Mat &output, Point &markerCent
 
     for (auto i = 0; i < markerIds.size(); i++) {
         auto marker = markerCorners.at(i);
+        auto pt = Point(
+                (marker.at(0).x + marker.at(2).x) / 2.0,
+                (marker.at(0).y + marker.at(2).y) / 2.0
+        );
         if (markerIds.at(i) == 42) {
-            markerCenter.x = (marker.at(0).x + marker.at(2).x) / 2.0;
-            markerCenter.y = (marker.at(0).x + marker.at(2).x) / 2.0;
+            markerCenter.x = pt.x;
+            markerCenter.y = pt.y;
         } else if (markerIds.at(i) == 17) {
-            markersEchantillons.push_back(Point(
-                    (marker.at(0).x + marker.at(2).x) / 2.0,
-                    (marker.at(0).y + marker.at(2).y) / 2.0
-            ));
+            markersEchantillons.push_back(pt);
         }
     }
 

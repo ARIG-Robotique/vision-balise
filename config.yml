@@ -26,3 +26,9 @@ detectionDelay: 500
 
 # Distance en pixels pour le clustering
 seuilCluster: 100
+
+# Zone de détection des échantillons (coordonnées table)
+detectionZone: [450, 100, 2100, 1650]
+
+# Zone de détection des distributeurs (coordonnées table)
+detectionZone2: [1250, 0, 500, 100]

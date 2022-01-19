@@ -31,6 +31,8 @@ public:
     int detectionDelay;
 
     int seuilCluster;
+    Rect detectionZone;
+    Rect detectionZone2;
 
     // from etalonnage
     bool etalonnageDone = false;

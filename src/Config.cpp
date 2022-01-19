@@ -28,6 +28,8 @@ bool Config::readConfigFile(const String &filename) {
     fs["detectionDelay"] >> detectionDelay;
 
     fs["seuilCluster"] >> seuilCluster;
+    fs["detectionZone"] >> detectionZone;
+    fs["detectionZone2"] >> detectionZone2;
 
     return true;
 }

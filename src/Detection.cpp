@@ -17,14 +17,15 @@ json Detection::run(const Mat &source) {
     auto start = arig_utils::startTiming();
     spdlog::info("DETECTION {}", ++index);
 
-    Mat output = source.clone();
+    Mat projected;
+    warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
+
+    auto output = projected.clone();
     json r;
 
     vector<Echantillon> echantillons;
-    detectMarkers(source, output, echantillons);
-
-    // TODO
-    vector<string> distribs;
+    vector<string> distribs = {STATUS_ABSENT, STATUS_ABSENT};
+    detectMarkers(projected, output, echantillons, distribs);
 
     r["echantillons"] = echantillons;
     r["distribs"] = distribs;
@@ -37,14 +38,25 @@ json Detection::run(const Mat &source) {
     return r;
 }
 
-void Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &result) {
+void
+Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &echantillons, vector<string> &distribs) {
 
     vector<int> markerIds;
-    vector<vector<Point2f>> markerCorners;
-    Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
-    aruco::detectMarkers(source, dictionary, markerCorners, markerIds);
+    vector<vector<Point2f>> markerCorners, rejectedCandidates;
+    auto dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+    auto parameters = aruco::DetectorParameters::create();
+    aruco::detectMarkers(source, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
 
     aruco::drawDetectedMarkers(output, markerCorners, markerIds);
+    aruco::drawDetectedMarkers(output, rejectedCandidates);
+
+    auto zoneTopLeft = arig_utils::tablePtToImagePt(config->detectionZone.br());
+    auto zoneBottomRight = arig_utils::tablePtToImagePt(config->detectionZone.tl());
+    rectangle(output, Rect(zoneTopLeft, zoneBottomRight), arig_utils::GREEN, 2);
+
+    zoneTopLeft = arig_utils::tablePtToImagePt(config->detectionZone2.br());
+    zoneBottomRight = arig_utils::tablePtToImagePt(config->detectionZone2.tl());
+    rectangle(output, Rect(zoneTopLeft, zoneBottomRight), arig_utils::GREEN, 2);
 
     for (auto i = 0; i < markerIds.size(); i++) {
         auto marker = markerCorners.at(i);
@@ -61,15 +73,23 @@ void Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon
         }
 
         if (!c.empty()) {
-            Point pt = arig_utils::imagePtToTablePt(Point(
+            auto pt = arig_utils::imagePtToTablePt(Point(
                     (marker.at(0).x + marker.at(2).x) / 2.0,
-                    (marker.at(0).x + marker.at(2).x) / 2.0
+                    (marker.at(0).y + marker.at(2).y) / 2.0
             ));
-            result.emplace_back(Echantillon{
-                    .c =  c,
-                    .x= pt.x,
-                    .y=pt.y
-            });
+            if (config->detectionZone.contains(pt)) {
+                echantillons.emplace_back(Echantillon{
+                        .c = c,
+                        .x =pt.x,
+                        .y =pt.y
+                });
+            } else if (config->detectionZone2.contains(pt) && c == COLOR_ROCK) {
+                if (pt.x < 1500) {
+                    distribs[0] = STATUS_PRESENT;
+                } else {
+                    distribs[1] = STATUS_PRESENT;
+                }
+            }
         }
     }
 }
