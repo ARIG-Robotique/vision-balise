@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
             "{mock-photo | | Camera mock file }";
 
     CommandLineParser parser(argc, argv, keys);
-    parser.about("ARIG Vision Balise 2021");
+    parser.about("ARIG Vision Balise 2022");
 
     if (parser.has("help")) {
         parser.printMessage();
