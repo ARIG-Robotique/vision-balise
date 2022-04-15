@@ -4,7 +4,7 @@
 # Description: Build du programme de vision balise                            #
 #=============================================================================#
 # Contrôle de la version minimale de CMake
-cmake_minimum_required(VERSION 3.9.2)
+cmake_minimum_required(VERSION 3.22.0)
 
 # Check program requis
 function (checkProgram name)
