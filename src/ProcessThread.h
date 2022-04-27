@@ -32,7 +32,6 @@ public:
 
     JsonResult startDetection();
     JsonResult startEtalonnage();
-    JsonResult confirmEtalonnage();
 
     void exit();
 

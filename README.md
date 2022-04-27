@@ -60,7 +60,6 @@ $ sudo modprobe bcm2835-v4l2
   "action": "STATUS",
   "data": {
     "etalonnageDone": true,
-    "etalonnageConfirmed": true,
     "detection": {
       "distribs": ["PRESENT", "ABSENT"],
       "echantillons": [
@@ -89,21 +88,6 @@ Les coordonnées sont dans le repère officiel (Y inversé pour le robot). `dist
   "status": "OK",
   "action": "ETALONNAGE",
   "data": "......base64....."
-}
-```
-
-### Valider l'étalonnage
-
-* Query
-```json
-{"action": "CONFIRM"}
-```
-
-* Réponse
-```json
-{
- "status": "OK",
- "action": "CONFIRM"
 }
 ```
 

@@ -36,7 +36,6 @@ public:
 
     // from etalonnage
     bool etalonnageDone = false;
-    bool etalonnageConfirmed = false;
     String team = TEAM_UNKNOWN;
     Mat perspectiveMap;
     Size perspectiveSize;

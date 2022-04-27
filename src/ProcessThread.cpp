@@ -41,7 +41,6 @@ JsonResult ProcessThread::getStatus() {
 
     pthread_mutex_lock(&m_dataMutex);
     data["etalonnageDone"] = m_config->etalonnageDone;
-    data["etalonnageConfirmed"] = m_config->etalonnageConfirmed;
     data["detection"] = m_detectionResult;
     pthread_mutex_unlock(&m_dataMutex);
 
@@ -95,10 +94,10 @@ Mat &ProcessThread::getImgOrig() {
  * @return
  */
 JsonResult ProcessThread::startDetection() {
-    if (!m_config->etalonnageConfirmed) {
+    if (!m_config->etalonnageDone) {
         JsonResult r;
         r.status = RESPONSE_ERROR;
-        r.errorMessage = "L'étallonage n'est pas validé";
+        r.errorMessage = "L'étallonage n'est pas fait";
         return r;
     }
 
@@ -122,25 +121,6 @@ JsonResult ProcessThread::startEtalonnage() {
         r.errorMessage = "Impossible de prendre une photo";
         return r;
     }
-}
-
-/**
- * Flague l'étalonnage comme correct
- * @return
- */
-JsonResult ProcessThread::confirmEtalonnage() {
-    JsonResult r;
-
-    if (!m_config->etalonnageDone) {
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "L'étallonage n'est pas fait";
-    } else {
-        spdlog::info("Etalonnage validé");
-        m_config->etalonnageConfirmed = true;
-        r.status = RESPONSE_OK;
-    }
-
-    return r;
 }
 
 /**
@@ -334,9 +314,7 @@ void ProcessThread::updateScreen() {
         m_screen->clear();
 
     } else if (m_action == ACTION_IDLE) {
-        if (m_config->etalonnageConfirmed) {
-            m_screen->showInfo("Etalonnage OK", "Team:" + m_config->team);
-        } else if (m_config->etalonnageDone) {
+        if (m_config->etalonnageDone) {
             m_screen->showInfo("Etalonnage done", "Team:" + m_config->team);
         } else {
             m_screen->showLogo();
