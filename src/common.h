@@ -30,10 +30,10 @@ using json = nlohmann::json;
 #define STATUS_PRESENT "PRESENT"
 #define STATUS_ABSENT "ABSENT"
 
-#define COLOR_RED "RED"
-#define COLOR_GREEN "GREEN"
-#define COLOR_BLUE "BLUE"
-#define COLOR_ROCK "ROCK"
+#define COLOR_RED "ROUGE"
+#define COLOR_GREEN "VERT"
+#define COLOR_BLUE "BLEU"
+#define COLOR_ROCK "ROCHER"
 
 #define TEAM_VIOLET "VIOLET"
 #define TEAM_JAUNE "JAUNE"
