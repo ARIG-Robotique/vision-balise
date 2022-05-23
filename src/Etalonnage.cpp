@@ -61,11 +61,7 @@ bool Etalonnage::detectMarkers(const Mat &source, Mat &output, Point &markerCent
     aruco::drawDetectedMarkers(output, rejectedCandidates);
 
     for (auto i = 0; i < markerIds.size(); i++) {
-        auto marker = markerCorners.at(i);
-        auto pt = Point(
-                (marker.at(0).x + marker.at(2).x) / 2.0,
-                (marker.at(0).y + marker.at(2).y) / 2.0
-        );
+        auto pt = arig_utils::markerCenter(markerCorners.at(i));
         if (markerIds.at(i) == 42) {
             markerCenter.x = pt.x;
             markerCenter.y = pt.y;

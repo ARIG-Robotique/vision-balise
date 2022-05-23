@@ -30,7 +30,9 @@ json Detection::run(const Mat &source) {
     r["echantillons"] = echantillons;
     r["distribs"] = distribs;
 
-    imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", output);
+    if (config->debug || index % 2 == 0) {
+        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", output);
+    }
 
     spdlog::debug(r.dump(2));
     spdlog::debug("Détection en {}ms", arig_utils::ellapsedTime(start));
@@ -73,10 +75,7 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
         }
 
         if (!c.empty()) {
-            auto pt = arig_utils::imagePtToTablePt(Point(
-                    (marker.at(0).x + marker.at(2).x) / 2.0,
-                    (marker.at(0).y + marker.at(2).y) / 2.0
-            ));
+            auto pt = arig_utils::imagePtToTablePt(arig_utils::markerCenter(marker));
             if (config->detectionZone.contains(pt)) {
                 echantillons.emplace_back(Echantillon{
                         .c = c,
@@ -89,6 +88,30 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
                 } else {
                     distribs[1] = STATUS_PRESENT;
                 }
+            }
+        }
+    }
+
+    // récupère les markers non identifiés (ceux qui sont bien carrés, mais sans ids)
+    for (const auto &marker: rejectedCandidates) {
+        if (marker.size() != 4) {
+            continue;
+        }
+        auto d1 = norm(marker.at(0) - marker.at(1));
+        auto d2 = norm(marker.at(1) - marker.at(2));
+        auto d3 = norm(marker.at(2) - marker.at(3));
+        auto d4 = norm(marker.at(3) - marker.at(0));
+        auto d = 5;
+
+        if (abs(d1 - d2) <= d && abs(d2 - d3) <= d && abs(d3 - d4) <= d && abs(d4 - d1) <= d) {
+            auto pt = arig_utils::imagePtToTablePt(arig_utils::markerCenter(marker));
+            if (config->detectionZone.contains(pt)) {
+                echantillons.emplace_back(Echantillon{
+                        .c = COLOR_UNKNOWN,
+                        .x =pt.x,
+                        .y =pt.y
+                });
+                putText(output, "UNKN", marker.at(0), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
             }
         }
     }

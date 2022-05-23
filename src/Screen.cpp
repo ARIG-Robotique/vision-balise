@@ -150,7 +150,8 @@ const map<string, string> CODES = {
         {COLOR_RED, "R"},
         {COLOR_BLUE, "B"},
         {COLOR_GREEN, "G"},
-        {COLOR_ROCK, "?"}
+        {COLOR_ROCK, "#"},
+        { COLOR_UNKNOWN, "?"}
 };
 
 String getSystemTemp() {

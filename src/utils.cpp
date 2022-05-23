@@ -232,6 +232,13 @@ namespace arig_utils {
         return Point(3000 - pt.x * 2, 2000 - pt.y * 2);
     }
 
+    Point markerCenter(const vector<Point2f> &marker) {
+        return Point(
+                (marker.at(0).x + marker.at(2).x) / 2.0,
+                (marker.at(0).y + marker.at(2).y) / 2.0
+        );
+    }
+
     /**
      * inRange compatible une plage de H qui croise l'origine (0=180)
      */

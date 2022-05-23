@@ -235,11 +235,20 @@ bool ProcessThread::takePhoto() {
         undistorted = source;
     }
 
+    float kerneldata[3][3] = {
+            {0,  -1, 0},
+            {-1, 5,  -1},
+            {0,  -1, 0}
+    };
+    Mat kernel(3, 3, CV_32F, kerneldata);
+    Mat sharp;
+    filter2D(undistorted, sharp, -1, kernel);
+
     Mat final;
     if (m_config->swapRgb) {
-        cvtColor(undistorted, final, COLOR_RGB2BGR);
+        cvtColor(sharp, final, COLOR_RGB2BGR);
     } else {
-        final = undistorted;
+        final = sharp;
     }
 
     pthread_mutex_lock(&m_dataMutex);
@@ -324,7 +333,7 @@ void ProcessThread::updateScreen() {
         if (!m_detectionResult.empty()) {
             m_screen->showDetection(m_detectionResult);
         } else {
-            m_screen->showInfo("Détection", "Team:" + m_config->team);
+            m_screen->showInfo("Detection", "Team:" + m_config->team);
         }
 
     } else {

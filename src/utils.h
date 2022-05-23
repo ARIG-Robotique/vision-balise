@@ -56,6 +56,8 @@ namespace arig_utils {
 
     Point imagePtToTablePt(const Point &pt);
 
+    Point markerCenter(const vector<Point2f> &marker);
+
     void hsvInRange(const Mat &imageHsv, const vector<Scalar> &range, Mat &output);
 
     Scalar meanBGR(const Scalar &scalar1, const Scalar &scalar2);

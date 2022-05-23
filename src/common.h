@@ -34,6 +34,7 @@ using json = nlohmann::json;
 #define COLOR_GREEN "VERT"
 #define COLOR_BLUE "BLEU"
 #define COLOR_ROCK "ROCHER"
+#define COLOR_UNKNOWN "INCONNU"
 
 #define TEAM_VIOLET "VIOLET"
 #define TEAM_JAUNE "JAUNE"
