@@ -79,8 +79,8 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
             if (config->detectionZone.contains(pt)) {
                 echantillons.emplace_back(Echantillon{
                         .c = c,
-                        .x =pt.x,
-                        .y =pt.y
+                        .x = pt.x,
+                        .y = pt.y
                 });
             } else if (config->detectionZone2.contains(pt) && c == COLOR_ROCK) {
                 if (pt.x < 1500) {
@@ -102,16 +102,18 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
         auto d3 = norm(marker.at(2) - marker.at(3));
         auto d4 = norm(marker.at(3) - marker.at(0));
         auto d = 5;
+        auto l = 25;
 
-        if (abs(d1 - d2) <= d && abs(d2 - d3) <= d && abs(d3 - d4) <= d && abs(d4 - d1) <= d) {
-            auto pt = arig_utils::imagePtToTablePt(arig_utils::markerCenter(marker));
+        if (abs(l - d1) <= d && abs(l - d2) <= d && abs(l - d3) <= d && abs(l - d4) <= d) {
+            auto center = arig_utils::markerCenter(marker);
+            auto pt = arig_utils::imagePtToTablePt(center);
             if (config->detectionZone.contains(pt)) {
                 echantillons.emplace_back(Echantillon{
                         .c = COLOR_UNKNOWN,
-                        .x =pt.x,
-                        .y =pt.y
+                        .x = pt.x,
+                        .y = pt.y
                 });
-                putText(output, "UNKN", marker.at(0), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
+                putText(output, "UNKN", center, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
             }
         }
     }
