@@ -114,6 +114,12 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
                         .y = pt.y
                 });
                 putText(output, "UNKN", center, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
+            } else if (config->detectionZone2.contains(pt)) {
+                if (pt.x < 1500) {
+                    distribs[0] = STATUS_PRESENT;
+                } else {
+                    distribs[1] = STATUS_PRESENT;
+                }
             }
         }
     }
