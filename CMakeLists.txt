@@ -24,7 +24,7 @@ set(DOWNLOAD_DIR "download")
 if (DEFINED BUILD_PI)
     add_definitions(-DPI)
     set(PI_TOOLS_HOME ${CMAKE_CURRENT_SOURCE_DIR}/${DOWNLOAD_DIR}/tools)
-    set(CMAKE_TOOLCHAIN_FILE ./raspberry.cmake)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/raspberry.cmake)
 endif()
 
 message(STATUS "Build PI     : ${BUILD_PI}")
