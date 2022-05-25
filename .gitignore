@@ -57,6 +57,6 @@ fabric.properties
 ### Project specific
 build*/
 download/
-output/
-output-sauron/
+logs/
+logs-sauron/
 samples/calib/

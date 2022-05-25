@@ -277,7 +277,7 @@ void ProcessThread::processIdle() {
 
         if (takePhoto()) {
             if (m_config->mockPhoto.empty() && (m_config->debug || i % 10 == 0)) {
-                imwrite(m_config->outputPrefix + "idle-" + to_string(i) + ".jpg", m_imgOrig);
+                imwrite(m_config->outputPrefix + "/idle-" + to_string(i) + ".jpg", m_imgOrig);
             }
         }
 

@@ -269,7 +269,7 @@ void Screen::update() {
     }
 
 //    imshow("Screen", image); // FIXME ne fonctionne pas depuis un thread
-    imwrite(config->outputPrefix + "screen.png", image);
+    imwrite(config->outputPrefix + "-screen.png", image);
 #endif
 }
 

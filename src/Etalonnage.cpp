@@ -26,7 +26,7 @@ JsonResult Etalonnage::run(const Mat &source) {
     vector<Point2f> ptsImages;
     vector<Point2f> ptsTable;
     if (!detectPerspectivePoints(clusters, ptsImages, ptsTable)) {
-        imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", output);
+        imwrite(config->outputPrefix + "/etallonage-result-" + to_string(index) + ".jpg", output);
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible de calculer la perspective";
         return r;
@@ -45,7 +45,7 @@ JsonResult Etalonnage::run(const Mat &source) {
     r.status = RESPONSE_OK;
     r.data = arig_utils::matToBase64(projected);
 
-    imwrite(config->outputPrefix + "etallonage-result-" + to_string(index) + ".jpg", output);
+    imwrite(config->outputPrefix + "/etallonage-result-" + to_string(index) + ".jpg", output);
 
     spdlog::debug("Etalonnage en {}ms", arig_utils::ellapsedTime(start));
 

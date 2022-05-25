@@ -37,7 +37,7 @@ bool Calibration::runAndSave(const String &directory, const String &filename, co
 
         if (config->debug) {
             drawChessboardCorners(image, board_sz, corners, found);
-            imwrite(config->outputPrefix + "calib-" + arig_utils::basename(file), image);
+            imwrite(config->outputPrefix + "/calib-" + arig_utils::basename(file), image);
         }
 
         if (config->testMode) {

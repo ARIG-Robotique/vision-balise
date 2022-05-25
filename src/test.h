@@ -8,7 +8,7 @@
 int i = 0;
 
 void show(Mat &mat, bool show, const Config *config) {
-    imwrite(config->outputPrefix + "test-" + to_string(i++) + ".jpg", mat);
+    imwrite(config->outputPrefix + "/test-" + to_string(i++) + ".jpg", mat);
     if (show) {
         imshow("debug", mat);
         waitKey(0);

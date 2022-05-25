@@ -32,7 +32,7 @@ json Detection::run(const Mat &source) {
     r["distribs"] = distribs;
 
     if (config->debug || index % 2 == 0) {
-        imwrite(config->outputPrefix + "detection-" + to_string(index) + ".jpg", output);
+        imwrite(config->outputPrefix + "/detection-" + to_string(index) + ".jpg", output);
     }
 
     spdlog::debug(r.dump(2));

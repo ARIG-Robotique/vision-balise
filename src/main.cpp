@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
             "{help | | Display help }"
             "{test | | Run in test mode }"
             "{debug | | Debug messages }"
-            "{output-dir | output/ | Process images storage }"
+            "{output-dir | logs/ | Process images storage }"
             "{calibration | | Run calibration }"
             "{calibration-dir | samples/calib/ | Calibration images }"
             "{calibration-file | calibration.yml | Calibration file }"
@@ -42,12 +42,13 @@ int main(int argc, char **argv) {
 
     // dossier de stockage des logs/images
     const String outputDir = parser.get<string>("output-dir");
-    const String outputPrefix = outputDir + getTimeStr() + "-";
+    const String outputPrefix = outputDir + getTimeStr();
 
     mkdir(outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(outputPrefix.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     // configuration du logger
-    auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "log.txt");
+    auto file_sink = make_shared<spdlog::sinks::basic_file_sink_mt>(outputPrefix + "-traces.log");
     spdlog::default_logger()->sinks().push_back(file_sink);
     spdlog::flush_every(std::chrono::seconds(1));
     spdlog::set_level(spdlog::level::debug);
