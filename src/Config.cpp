@@ -29,7 +29,8 @@ bool Config::readConfigFile(const String &filename) {
 
     fs["seuilCluster"] >> seuilCluster;
     fs["detectionZone"] >> detectionZone;
-    fs["detectionZone2"] >> detectionZone2;
+    fs["zoneDistribViolet"] >> zoneDistribViolet;
+    fs["zoneDistribJaune"] >> zoneDistribJaune;
 
     return true;
 }

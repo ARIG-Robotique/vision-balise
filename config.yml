@@ -31,4 +31,5 @@ seuilCluster: 100
 detectionZone: [450, 100, 2100, 1800]
 
 # Zone de détection des distributeurs (coordonnées table)
-detectionZone2: [1250, 0, 500, 100]
+zoneDistribViolet: [1250, 0, 250, 100]
+zoneDistribJaune: [1500, 0, 250, 100]

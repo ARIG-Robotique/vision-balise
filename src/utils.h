@@ -54,6 +54,8 @@ namespace arig_utils {
 
     Point tablePtToImagePt(const Point &pt);
 
+    Rect tableRectToImageRect(const Rect &rect);
+
     Point imagePtToTablePt(const Point &pt);
 
     Point markerCenter(const vector<Point2f> &marker);

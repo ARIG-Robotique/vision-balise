@@ -25,7 +25,8 @@ json Detection::run(const Mat &source) {
 
     vector<Echantillon> echantillons;
     vector<string> distribs = {STATUS_ABSENT, STATUS_ABSENT};
-    detectMarkers(projected, output, echantillons, distribs);
+    detectMarkers(projected, output, echantillons);
+    detectDistribs(projected, output, distribs);
 
     r["echantillons"] = echantillons;
     r["distribs"] = distribs;
@@ -40,8 +41,33 @@ json Detection::run(const Mat &source) {
     return r;
 }
 
-void
-Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &echantillons, vector<string> &distribs) {
+void Detection::detectDistribs(const Mat &source, Mat &output, vector<string> &distribs) {
+
+    auto zoneViolet = arig_utils::tableRectToImageRect(config->zoneDistribViolet);
+    auto zoneJaune = arig_utils::tableRectToImageRect(config->zoneDistribJaune);
+    rectangle(output, zoneViolet, arig_utils::GREEN, 2);
+    rectangle(output, zoneJaune, arig_utils::GREEN, 2);
+
+    Mat extractedViolet = source(zoneViolet);
+    Mat extractedJaune = source(zoneJaune);
+
+    auto normViolet = norm(config->distribViolet, extractedViolet);
+    auto normJaune = norm(config->distribJaune, extractedJaune);
+    auto similarityViolet = 1 - normViolet / (zoneViolet.width * zoneViolet.height);
+    auto similarityJaune = 1 - normJaune / (zoneJaune.width * zoneJaune.height);
+
+    spdlog::debug("Similarity distrib violet : {}", similarityViolet);
+    spdlog::debug("Similarity distrib jaune : {}", similarityJaune);
+
+    if (similarityViolet > 0) {
+        distribs[0] = STATUS_PRESENT;
+    }
+    if (similarityJaune > 0) {
+        distribs[1] = STATUS_PRESENT;
+    }
+}
+
+void Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &echantillons) {
 
     vector<int> markerIds;
     vector<vector<Point2f>> markerCorners, rejectedCandidates;
@@ -54,10 +80,6 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
 
     auto zoneTopLeft = arig_utils::tablePtToImagePt(config->detectionZone.br());
     auto zoneBottomRight = arig_utils::tablePtToImagePt(config->detectionZone.tl());
-    rectangle(output, Rect(zoneTopLeft, zoneBottomRight), arig_utils::GREEN, 2);
-
-    zoneTopLeft = arig_utils::tablePtToImagePt(config->detectionZone2.br());
-    zoneBottomRight = arig_utils::tablePtToImagePt(config->detectionZone2.tl());
     rectangle(output, Rect(zoneTopLeft, zoneBottomRight), arig_utils::GREEN, 2);
 
     for (auto i = 0; i < markerIds.size(); i++) {
@@ -82,12 +104,6 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
                         .x = pt.x,
                         .y = pt.y
                 });
-            } else if (config->detectionZone2.contains(pt) && c == COLOR_ROCK) {
-                if (pt.x < 1500) {
-                    distribs[0] = STATUS_PRESENT;
-                } else {
-                    distribs[1] = STATUS_PRESENT;
-                }
             }
         }
     }
@@ -114,12 +130,6 @@ Detection::detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &ec
                         .y = pt.y
                 });
                 putText(output, "UNKN", center, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
-            } else if (config->detectionZone2.contains(pt)) {
-                if (pt.x < 1500) {
-                    distribs[0] = STATUS_PRESENT;
-                } else {
-                    distribs[1] = STATUS_PRESENT;
-                }
             }
         }
     }

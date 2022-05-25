@@ -32,13 +32,17 @@ public:
 
     int seuilCluster;
     Rect detectionZone;
-    Rect detectionZone2;
+    Rect zoneDistribViolet;
+    Rect zoneDistribJaune;
 
     // from etalonnage
     bool etalonnageDone = false;
     String team = TEAM_UNKNOWN;
     Mat perspectiveMap;
     Size perspectiveSize;
+
+    Mat distribViolet;
+    Mat distribJaune;
 
     bool readConfigFile(const String &filename);
     bool readCalibrationFile(const String &filename);

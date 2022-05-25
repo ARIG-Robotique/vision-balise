@@ -22,7 +22,8 @@ public:
     json run(const Mat &source);
 
 private:
-    void detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &echantillons, vector<string> &distribs);
+    void detectMarkers(const Mat &source, Mat &output, vector<Echantillon> &echantillons);
+    void detectDistribs(const Mat &source, Mat &output, vector<string> &distribs);
 };
 
 #endif //VISION_BALISE_DETECTION_H

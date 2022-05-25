@@ -39,6 +39,9 @@ JsonResult Etalonnage::run(const Mat &source) {
     Mat projected;
     warpPerspective(source, projected, config->perspectiveMap, config->perspectiveSize);
 
+    config->distribViolet = projected(arig_utils::tableRectToImageRect(config->zoneDistribViolet));
+    config->distribJaune = projected(arig_utils::tableRectToImageRect(config->zoneDistribJaune));
+
     r.status = RESPONSE_OK;
     r.data = arig_utils::matToBase64(projected);
 

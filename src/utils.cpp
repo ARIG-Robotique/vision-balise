@@ -228,6 +228,12 @@ namespace arig_utils {
         return Point((3000 - pt.x) / 2.0, (2000 - pt.y) / 2.0);
     }
 
+    Rect tableRectToImageRect(const Rect &rect) {
+        auto tl = arig_utils::tablePtToImagePt(rect.br());
+        auto br = arig_utils::tablePtToImagePt(rect.tl());
+        return Rect(tl, br);
+    }
+
     Point imagePtToTablePt(const Point &pt) {
         return Point(3000 - pt.x * 2, 2000 - pt.y * 2);
     }
