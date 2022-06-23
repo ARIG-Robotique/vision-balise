@@ -41,7 +41,7 @@ void MultiSocketHelper::init() {
     address.sin_port = htons(this->port);
 
     //bind the socket to localhost port
-    if (bind(master_socket, (struct sockaddr *) &address, sizeof(address)) < 0) {
+    if (::bind(master_socket, (struct sockaddr *) &address, sizeof(address)) < 0) {
         spdlog::error("Erreur sur bind()");
         throw runtime_error("Erreur sur bind()");
     }

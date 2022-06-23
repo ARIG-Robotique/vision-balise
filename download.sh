@@ -11,7 +11,7 @@ OPENCV_CONTRIB_FILENAME=opencv_contrib-${OPENCV_VERSION}
 OPENCV_CONTRIB_DOWNLOAD_URL=https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.zip
 OPENCV_CONTRIB_MODULES=aruco
 
-JSON_VERSION=v2.1.1
+JSON_VERSION=v3.10.5
 JSON_DIR=json-${JSON_VERSION}
 JSON_FILENAME=json.hpp
 JSON_DOWNLOAD_URL=https://github.com/nlohmann/json/releases/download/${JSON_VERSION}/${JSON_FILENAME}
