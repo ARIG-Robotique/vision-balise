@@ -30,19 +30,27 @@ $ sudo modprobe bcm2835-v4l2
 
 ## Messages JSON
 
-### Récupérer la dernière photo prise
+### Récupérer les dernières photo prise
 
 * Query
 ```json
-{"action":"PHOTO"}
+{
+  "action":"PHOTO",
+  "cameras": ["cam1gauche", "cam2droite"]
+}
 ```
+
+> Le champ `cameras` est facultatif, si il est null ou vide, toutes les cameras sont retournées. 
 
 * Réponse
 ```json
 {
   "status": "OK",
   "action": "PHOTO",
-  "data": "......base64....."
+  "data": {
+    "cam1gauche": ".......... BASE64 ............",
+    "cam2droite": ".......... BASE64 ............"
+  } 
 }
 ```
 
@@ -50,8 +58,22 @@ $ sudo modprobe bcm2835-v4l2
 
 * Query
 ```json
-{"action":"STATUS"}
+{
+  "action":"STATUS",
+  "content": ["etalonnage", "pots" ]
+}
 ```
+
+Le champ content peut contenir les valeurs suivantes :
+
+- `etalonnage` : Contient l'état de l'étalonnage.
+- `pots` : Récupération de l'état des zones de stocks de pots.
+- `horloge` : Récupération des plantes dans les zones au centre de la table.
+- `plantes` : Liste des plantes isolés sur la table.
+- `panneaux` : Etat des panneaux solaires
+- `robots` : Position des robots sur la table.
+
+> Le champ `content` vide ou null retourne toutes les infos
 
 * Réponse
 ```json
@@ -59,21 +81,54 @@ $ sudo modprobe bcm2835-v4l2
   "status": "OK",
   "action": "STATUS",
   "data": {
-    "etalonnageDone": true,
-    "detection": {
-      "distribs": ["PRESENT", "ABSENT"],
-      "echantillons": [
-        {"c": "ROUGE", "x": 1500, "y": 850},
-        {"c": "VERT", "x": 1500, "y": 850},
-        {"c": "BLEU", "x": 1500, "y": 850},
-        {"c": "ROCHER", "x": 1500, "y": 850}
-      ]
+    "etalonnage": true,
+    "pots": { 
+      "gaucheBleue": true,
+      "gaucheJaune": true,
+      "gauchePanneaux": true,
+      "droitePanneaux": true,
+      "droiteBleue": true,
+      "droiteJaune": true
+    },
+    "horloge": {
+      "0": [
+        { "x": 1500 , "y":  1496, "type":  "F", "debout": true },
+        { "x": 1520 , "y":  1446, "type":  "R", "debout": true }
+      ],
+      "2": [ ],
+      "4": [ ],
+      "6": [ ],
+      "8": [ ],
+      "10": [ ]
+    },
+    "plantes": [
+      { "x": 800 , "y":  1138, "type":  "F", "debout": true },
+      { "x": 599 , "y":  800, "type":  "R", "debout": false }
+    ],
+    "panneaux": [ // Index de gauche à droite
+      "NEUTRE",
+      "JAUNE",
+      "BLEUE",
+      "JAUNE_BLEU",
+      "NEUTRE",
+      "NEUTRE",
+      "NEUTRE",
+      "NEUTRE",
+      "NEUTRE"
+    ],
+    "robots": {
+      "nerell": { "x": 1500, "y": 1000 },
+      "adversaire": { "x": 1000, "y": 1500 },
+      "pamis": {
+        "nomPami1": { "x": 1000, "y": 1500 },
+        "nomPami2": { "x": 1000, "y": 1500 }
+      }
     }
   }
 }
 ```
 
-Les coordonnées sont dans le repère officiel (Y inversé pour le robot). `distribs` est dans l'ordre droite (JAUNE) / gauche (VIOLET).
+> Les coordonnées sont dans le repère officiel (Y inversé pour le robot). `distribs` est dans l'ordre droite (JAUNE) / gauche (VIOLET).
 
 ### Lancer l'étalonnage
 
@@ -87,7 +142,10 @@ Les coordonnées sont dans le repère officiel (Y inversé pour le robot). `dist
 {
   "status": "OK",
   "action": "ETALONNAGE",
-  "data": "......base64....."
+  "data": {
+    "cam1gauche": ".......... BASE64 ............",
+    "cam2droite": ".......... BASE64 ............"
+  }
 }
 ```
 
@@ -105,6 +163,24 @@ Les coordonnées sont dans le repère officiel (Y inversé pour le robot). `dist
  "action": "DETECTION"
 }
 ```
+
+### Demander l'équipe de match
+
+* Query
+```json
+{"action": "EQUIPE"}
+```
+
+* Réponse
+```json
+{
+ "status": "OK",
+ "action": "EQUIPE",
+ "data": "JAUNE"
+}
+```
+
+> Data est une des valeurs parmis `JAUNE`, `BLEUE` ou `INCONNU`
 
 ### Revient dans un état d'attente
 
